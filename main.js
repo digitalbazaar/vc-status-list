@@ -1,7 +1,7 @@
 /*!
  * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
  */
-import RevocationList from './RevocationList.js';
+import StatusList from './StatusList.js';
 import vc from '@digitalbazaar/vc';
 
 const CONTEXTS = {
@@ -10,11 +10,11 @@ const CONTEXTS = {
 };
 
 export async function createList({length}) {
-  return new RevocationList({length});
+  return new StatusList({length});
 }
 
 export async function decodeList({encodedList}) {
-  return RevocationList.decode({encodedList});
+  return StatusList.decode({encodedList});
 }
 
 export async function createCredential({id, list}) {

@@ -1,7 +1,7 @@
 {
-  "name": "vc-revocation-list",
+  "name": "vc-status-list",
   "version": "3.0.1-0",
-  "description": "Verifiable Credentials Revocation List 2020",
+  "description": "Verifiable Credentials Status List",
   "license": "BSD-3-Clause",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "lint": "eslint ."
   },
   "files": [
-    "RevocationList.js",
+    "StatusList.js",
     "index.js",
     "main.js"
   ],
@@ -51,14 +51,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/digitalbazaar/vc-revocation-list"
+    "url": "https://github.com/digitalbazaar/vc-status-list"
   },
   "keywords": [
     "vc",
     "verifiable credential",
-    "revocation list",
+    "status list",
     "bitstring",
-    "RevocationList2020",
+    "StatusList2021",
     "VerifiableCredential"
   ],
   "author": {
@@ -67,9 +67,9 @@
     "url": "https://digitalbazaar.com/"
   },
   "bugs": {
-    "url": "https://github.com/digitalbazaar/vc-revocation-list/issues"
+    "url": "https://github.com/digitalbazaar/vc-status-list/issues"
   },
-  "homepage": "https://github.com/digitalbazaar/vc-revocation-list",
+  "homepage": "https://github.com/digitalbazaar/vc-status-list",
   "module": "main.js",
   "engines": {
     "node": ">=12.0.0"
