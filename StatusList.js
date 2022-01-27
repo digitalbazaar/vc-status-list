@@ -3,7 +3,7 @@
  */
 import Bitstring from '@digitalbazaar/bitstring';
 
-export default class RevocationList {
+export default class StatusList {
   constructor({length, buffer} = {}) {
     this.bitstring = new Bitstring({length, buffer});
     this.length = this.bitstring.length;
@@ -26,6 +26,6 @@ export default class RevocationList {
 
   static async decode({encodedList}) {
     const buffer = await Bitstring.decodeBits({encoded: encodedList});
-    return new RevocationList({buffer});
+    return new StatusList({buffer});
   }
 }
