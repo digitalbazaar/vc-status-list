@@ -3,12 +3,11 @@
  */
 import StatusList from './StatusList.js';
 import vc from '@digitalbazaar/vc';
+import statusListCtx from 'vc-status-list-context';
+import credentialsCtx from 'credentials-context';
 
-const CONTEXTS = {
-  VC_V1: 'https://www.w3.org/2018/credentials/v1',
-  RL_V1: 'https://w3id.org/vc-revocation-list-2020/v1'
-};
-
+const VC_V1_CONTEXT = credentialsCtx.constants.CREDENTIALS_CONTEXT_V1_URL;
+const SL_V1_CONTEXT = statusListCtx.constants.CONTEXT_URL_V1;
 export async function createList({length}) {
   return new StatusList({length});
 }
@@ -20,7 +19,7 @@ export async function decodeList({encodedList}) {
 export async function createCredential({id, list}) {
   const encodedList = await list.encode();
   return {
-    '@context': [CONTEXTS.VC_V1, CONTEXTS.RL_V1],
+    '@context': [VC_V1_CONTEXT, SL_V1_CONTEXT],
     id,
     type: ['VerifiableCredential', 'RevocationList2020Credential'],
     credentialSubject: {
@@ -65,8 +64,8 @@ export function statusTypeMatches({credential} = {}) {
   if(!Array.isArray(contexts)) {
     throw new TypeError('"@context" must be an array.');
   }
-  if(contexts[0] !== CONTEXTS.VC_V1) {
-    throw new Error(`The first "@context" value must be "${CONTEXTS.VC_V1}".`);
+  if(contexts[0] !== VC_V1_CONTEXT) {
+    throw new Error(`The first "@context" value must be "${VC_V1_CONTEXT}".`);
   }
   const {credentialStatus} = credential;
   if(!credentialStatus) {
@@ -77,7 +76,7 @@ export function statusTypeMatches({credential} = {}) {
     // bad status
     throw new Error('"credentialStatus" is invalid.');
   }
-  if(!contexts.includes(CONTEXTS.RL_V1)) {
+  if(!contexts.includes(SL_V1_CONTEXT)) {
     // context not present, no match
     return false;
   }
@@ -97,11 +96,11 @@ export function assertRevocationList2020Context({credential} = {}) {
   if(!Array.isArray(contexts)) {
     throw new TypeError('"@context" must be an array.');
   }
-  if(contexts[0] !== CONTEXTS.VC_V1) {
-    throw new Error(`The first "@context" value must be "${CONTEXTS.VC_V1}".`);
+  if(contexts[0] !== VC_V1_CONTEXT) {
+    throw new Error(`The first "@context" value must be "${VC_V1_CONTEXT}".`);
   }
-  if(!contexts.includes(CONTEXTS.RL_V1)) {
-    throw new TypeError(`"@context" must include "${CONTEXTS.RL_V1}".`);
+  if(!contexts.includes(SL_V1_CONTEXT)) {
+    throw new TypeError(`"@context" must include "${SL_V1_CONTEXT}".`);
   }
 }
 
