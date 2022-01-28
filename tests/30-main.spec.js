@@ -2,12 +2,13 @@
  * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
  */
 import {
-  createList, decodeList, createCredential, checkStatus, statusTypeMatches
+  createList, decodeList, createCredential, checkStatus, statusTypeMatches,
+  assertStatusList2021Context, getCredentialStatus
 } from '..';
 import {extendContextLoader} from 'jsonld-signatures';
 import statusListCtx from 'vc-status-list-context';
 import vc from '@digitalbazaar/vc';
-import {assertStatusList2021Context, getCredentialStatus} from '../main.js';
+import {slCredential as SLC} from './mock-sl-credential.js';
 
 const {defaultDocumentLoader} = vc;
 
@@ -16,29 +17,11 @@ const VC_SL_CONTEXT = statusListCtx.contexts.get(VC_SL_CONTEXT_URL);
 
 const encodedList100k =
   'H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA';
-const encodedList100KWith50KthRevoked =
-  'H4sIAAAAAAAAA-3OMQ0AAAgDsOHfNB72EJJWQRMAAAAAAIDWXAcAAAAAAIDHFrc4zDz' +
-  'UMAAA';
 
 const documents = new Map();
 documents.set(VC_SL_CONTEXT_URL, VC_SL_CONTEXT);
 
-const RLC = {
-  '@context': [
-    'https://www.w3.org/2018/credentials/v1',
-    VC_SL_CONTEXT_URL
-  ],
-  id: 'https://example.com/status/1',
-  issuer: 'did:key:z6MknUVLM84Eo5mQswCqP7f6oNER84rmVKkCvypob8UtBC8K',
-  issuanceDate: '2021-03-10T04:24:12.164Z',
-  type: ['VerifiableCredential', 'StatusList2021Credential'],
-  credentialSubject: {
-    id: `https://example.com/status/1#list`,
-    type: 'RevocationList2021',
-    encodedList: encodedList100KWith50KthRevoked
-  }
-};
-documents.set(RLC.id, RLC);
+documents.set(SLC.id, SLC);
 
 const documentLoader = extendContextLoader(async url => {
   const doc = documents.get(url);
@@ -55,10 +38,12 @@ const documentLoader = extendContextLoader(async url => {
 describe('main', () => {
   it('should create a list', async () => {
     const list = await createList({length: 8});
+    should.exist(list.bitstring);
+    should.exist(list.length);
     list.length.should.equal(8);
   });
 
-  it('should fail to create a list if no length', async () => {
+  it('should fail to create a list if no length is provided', async () => {
     let err;
     try {
       await createList();
@@ -69,7 +54,7 @@ describe('main', () => {
     err.name.should.equal('TypeError');
   });
 
-  it('should decode a list', async () => {
+  it('should decode an encoded list', async () => {
     const list = await decodeList({encodedList: encodedList100k});
     list.length.should.equal(100000);
   });
@@ -110,9 +95,9 @@ describe('main', () => {
         id: 'https://example.com/status/1#67342',
         type: 'RevocationList2021Status',
         statusListIndex: '67342',
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       },
-      issuer: RLC.issuer,
+      issuer: SLC.issuer,
     };
     const result = statusTypeMatches({credential});
     result.should.equal(true);
@@ -134,9 +119,9 @@ describe('main', () => {
         id: 'https://example.com/status/1#67342',
         type: 'NotMatch',
         statusListIndex: '67342',
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       },
-      issuer: RLC.issuer,
+      issuer: SLC.issuer,
     };
     const result = statusTypeMatches({credential});
     result.should.equal(false);
@@ -158,12 +143,13 @@ describe('main', () => {
         id: 'https://example.com/status/1#67342',
         type: 'RevocationList2021Status',
         statusListIndex: '67342',
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       },
-      issuer: RLC.issuer,
+      issuer: SLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false
+    });
     result.verified.should.equal(true);
   });
 
@@ -183,13 +169,17 @@ describe('main', () => {
         id: 'https://example.com/status/1#67342',
         type: 'ex:NonmatchingStatusType',
         statusListIndex: '67342',
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       },
-      issuer: RLC.issuer,
+      issuer: SLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false
+    });
     result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal('"credentialStatus" type must be ' +
+      '"RevocationList2021Status" or "SuspensionList2021Status".');
   });
 
   it('should fail to verify status with missing index', async () => {
@@ -207,38 +197,46 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
         type: 'RevocationList2021Status',
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       },
-      issuer: RLC.issuer,
+      issuer: SLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false
+    });
     result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal('"statusListIndex" must be an integer.');
   });
 
-  it('should fail to verify status with missing list credential', async () => {
-    const credential = {
-      '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        VC_SL_CONTEXT_URL
-      ],
-      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
-      type: ['VerifiableCredential', 'example:TestCredential'],
-      credentialSubject: {
-        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
-        'example:test': 'foo'
-      },
-      credentialStatus: {
-        id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2021Status',
-        statusListIndex: '67342'
-      },
-      issuer: RLC.issuer,
-    };
-    const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false});
-    result.verified.should.equal(false);
-  });
+  it('should fail to verify status with missing "statusListCredential"',
+    async () => {
+      const credential = {
+        '@context': [
+          'https://www.w3.org/2018/credentials/v1',
+          VC_SL_CONTEXT_URL
+        ],
+        id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+        type: ['VerifiableCredential', 'example:TestCredential'],
+        credentialSubject: {
+          id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+          'example:test': 'foo'
+        },
+        credentialStatus: {
+          id: 'https://example.com/status/1#67342',
+          type: 'RevocationList2021Status',
+          statusListIndex: '67342'
+        },
+        issuer: SLC.issuer,
+      };
+      const result = await checkStatus({
+        credential, documentLoader, verifyStatusListCredential: false
+      });
+      result.verified.should.equal(false);
+      should.exist(result.error);
+      result.error.message.should.equal('"credentialStatus" ' +
+        'statusListCredential must be a string.');
+    });
 
   it('should fail to verify status for revoked credential', async () => {
     const credential = {
@@ -256,13 +254,158 @@ describe('main', () => {
         id: 'https://example.com/status/1#50000',
         type: 'RevocationList2021Status',
         statusListIndex: '50000',
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       },
-      issuer: RLC.issuer,
+      issuer: SLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false
+    });
     result.verified.should.equal(false);
+  });
+
+  it('should fail to verify status if documentLoader is unable to load ' +
+    '"statusListCredential"', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:e74fb1d6-7926-11ea-8e11-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:011e064e-7927-11ea-8975-10bf48838a41',
+        'example:test': 'bar'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#50000',
+        type: 'RevocationList2021Status',
+        statusListIndex: '50000',
+        // intentionally set statusListCredential to an id that is not set
+        // in documents
+        statusListCredential: 'https://example.com/status/2'
+      },
+      issuer: SLC.issuer,
+    };
+    const result = await checkStatus({
+      credential, documentLoader, verifyStatusListCredential: false
+    });
+    result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal('Could not load ' +
+      '"StatusList2021Credential"; reason: Document loader unable to load ' +
+      'URL "https://example.com/status/2".');
+  });
+
+  it('should fail to verify status if "statusListCredential" type does not ' +
+    'include "StatusList2021Credential"', async () => {
+    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    // intentionally set SLC type to an invalid type
+    invalidSLC.type = ['InvalidType'];
+    invalidSLC.id = 'https://example.com/status/invalid-slc-type';
+
+    documents.set(invalidSLC.id, invalidSLC);
+
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:e74fb1d6-7926-11ea-8e11-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:011e064e-7927-11ea-8975-10bf48838a41',
+        'example:test': 'bar'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#50000',
+        type: 'RevocationList2021Status',
+        statusListIndex: '50000',
+        statusListCredential: invalidSLC.id
+      },
+      issuer: SLC.issuer,
+    };
+    const result = await checkStatus({
+      credential, documentLoader, verifyStatusListCredential: false
+    });
+    result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal('Status list credential must include ' +
+      '"StatusList2021Credential" type.');
+  });
+
+  it('should fail to verify status if "credentialSubject" type is not ' +
+    '"RevocationList2021"', async () => {
+    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    // intentionally set credential subject type to an invalid type
+    invalidSLC.credentialSubject.type = 'InvalidType';
+    invalidSLC.id = 'https://example.com/status/invalid-rl-type';
+
+    documents.set(invalidSLC.id, invalidSLC);
+
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:e74fb1d6-7926-11ea-8e11-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:011e064e-7927-11ea-8975-10bf48838a41',
+        'example:test': 'bar'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#50000',
+        type: 'RevocationList2021Status',
+        statusListIndex: '50000',
+        statusListCredential: invalidSLC.id
+      },
+      issuer: SLC.issuer,
+    };
+    const result = await checkStatus({
+      credential, documentLoader, verifyStatusListCredential: false
+    });
+    result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal('Revocation list type must be ' +
+      '"RevocationList2021".');
+  });
+
+  it('should fail to verify status if "credentialSubject.encodedList" ' +
+    'cannot not be decoded', async () => {
+    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    // intentionally set encodedList to an invalid value
+    invalidSLC.credentialSubject.encodedList = 'INVALID-XYZ';
+    invalidSLC.id = 'https://example.com/status/invalid-encoded-list';
+
+    documents.set(invalidSLC.id, invalidSLC);
+
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:e74fb1d6-7926-11ea-8e11-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:011e064e-7927-11ea-8975-10bf48838a41',
+        'example:test': 'bar'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#50000',
+        type: 'RevocationList2021Status',
+        statusListIndex: '50000',
+        statusListCredential: invalidSLC.id
+      },
+      issuer: SLC.issuer,
+    };
+    const result = await checkStatus({
+      credential, documentLoader, verifyStatusListCredential: false
+    });
+    result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal('Could not decode encoded revocation ' +
+      'list; reason: undefined');
   });
 
   it('should fail to verify status on missing "credential" param', async () => {
@@ -270,7 +413,8 @@ describe('main', () => {
     let result;
     try {
       result = await checkStatus({
-        documentLoader, verifyStatusListCredential: false});
+        documentLoader, verifyStatusListCredential: false
+      });
       result.verified.should.equal(false);
     } catch(e) {
       err = e;
@@ -287,7 +431,7 @@ describe('main', () => {
   });
 
   it('should fail to verify if credential is not an object for ' +
-   'statusTypeMatches"', async () => {
+    'statusTypeMatches"', async () => {
     let err;
     let result;
     try {
@@ -411,8 +555,8 @@ describe('main', () => {
     err.message.should.contain('first "@context" value');
   });
 
-  it('should fail when "credentialStatus" does not ' +
-    'exist in "statusTypeMatches"', async () => {
+  it('should fail when "credentialStatus" does not exist in ' +
+    '"statusTypeMatches"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential({id, list});
@@ -462,7 +606,7 @@ describe('main', () => {
         id: 'https://example.com/status/1#50000',
         type: 'RevocationList2021Status',
         statusListIndex: '50000',
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       };
       result = statusTypeMatches({credential});
     } catch(e) {
@@ -526,7 +670,7 @@ describe('main', () => {
         credentialStatus: {
           id: 'https://example.com/status/1#67342',
           type: 'RevocationList2021Status',
-          statusListCredential: RLC.id
+          statusListCredential: SLC.id
         }
       };
       const documentLoader = 'https://example.com/status/1';
@@ -534,7 +678,8 @@ describe('main', () => {
       let result;
       try {
         result = await checkStatus({
-          credential, documentLoader, verifyStatusListCredential: false});
+          credential, documentLoader, verifyStatusListCredential: false
+        });
       } catch(e) {
         err = e;
       }
@@ -567,7 +712,7 @@ describe('main', () => {
         id: 'https://example.com/status/1#50000',
         type: 'RevocationList2021Status',
         statusListIndex: '50000',
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       }
     };
     const documentLoader = extendContextLoader(async url => {
@@ -622,7 +767,7 @@ describe('main', () => {
         id: 'https://example.com/status/1#50000',
         type: 'RevocationList2021Status',
         statusListIndex: 50000,
-        statusListCredential: RLC.id
+        statusListCredential: SLC.id
       }
     };
     let err;
@@ -630,8 +775,7 @@ describe('main', () => {
     try {
       delete credential.type[1];
       result = await checkStatus({
-        credential, documentLoader,
-        suite: {}, verifyStatusListCredential: true
+        credential, documentLoader, suite: {}, verifyStatusListCredential: true
       });
     } catch(e) {
       err = e;
@@ -664,10 +808,10 @@ describe('main', () => {
         id: 'https://example.com/status/1#67342',
         type: 'RevocationList2021Status',
         statusListIndex: '67342',
-        statusListCredential: RLC.id,
+        statusListCredential: SLC.id,
       },
-      // this issuer does not match the issuer for the mock RLC specified
-      // by `RLC.id` above
+      // this issuer does not match the issuer for the mock SLC specified
+      // by `SLC.id` above
       issuer: 'did:example:1234',
     };
     const result = await checkStatus({
@@ -698,10 +842,10 @@ describe('main', () => {
           id: 'https://example.com/status/1#67342',
           type: 'RevocationList2021Status',
           statusListIndex: '67342',
-          statusListCredential: RLC.id,
+          statusListCredential: SLC.id,
         },
-        // this issuer does not match the issuer for the mock RLC specified
-        // by `RLC.id` above
+        // this issuer does not match the issuer for the mock SLC specified
+        // by `SLC.id` above
         issuer: 'did:example:1234',
       };
       const result = await checkStatus({
@@ -709,9 +853,10 @@ describe('main', () => {
         documentLoader,
         verifyStatusListCredential: false,
         // this flag is set to allow different values for credential.issuer and
-        // RLC.issuer
+        // SLC.issuer
         verifyMatchingIssuers: false,
       });
       result.verified.should.equal(true);
     });
+
 });

@@ -15,25 +15,42 @@ describe('StatusList', () => {
     list.length.should.equal(8);
   });
 
-  it('should fail to create an instance if no length', async () => {
-    let err;
-    try {
-      new StatusList();
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    err.name.should.equal('TypeError');
-  });
+  it('should fail to create an instance if no length or buffer is provided',
+    async () => {
+      let err;
+      try {
+        new StatusList();
+      } catch(e) {
+        err = e;
+      }
+      should.exist(err);
+      err.name.should.equal('TypeError');
+    });
 
   it('should encode', async () => {
     const list = new StatusList({length: 100000});
-    const encodedList = await list.encode();
+    let encodedList;
+    let err;
+    try {
+      encodedList = await list.encode();
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.exist(encodedList);
     encodedList.should.equal(encodedList100k);
   });
 
   it('should decode', async () => {
-    const list = await StatusList.decode({encodedList: encodedList100k});
+    let err;
+    let list;
+    try {
+      list = await StatusList.decode({encodedList: encodedList100k});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.exist(list);
     list.length.should.equal(100000);
   });
 
@@ -58,7 +75,8 @@ describe('StatusList', () => {
     list.isRevoked(7).should.equal(false);
   });
 
-  it('should fail to mark a credential revoked', async () => {
+  it('should fail to mark a credential revoked no "revoked" boolean param ' +
+    'is passed', async () => {
     const list = new StatusList({length: 8});
     let err;
     try {
@@ -68,19 +86,22 @@ describe('StatusList', () => {
     }
     should.exist(err);
     err.name.should.equal('TypeError');
+    err.message.should.equal('"revoked" must be a boolean.');
   });
 
-  it('should fail to get a credential status out of range', async () => {
-    const list = new StatusList({length: 8});
-    let err;
-    try {
-      list.isRevoked(8);
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    err.name.should.equal('Error');
-  });
+  it('should fail to get a credential status for position that is out of range',
+    async () => {
+      const list = new StatusList({length: 8});
+      let err;
+      try {
+        list.isRevoked(8);
+      } catch(e) {
+        err = e;
+      }
+      should.exist(err);
+      err.name.should.equal('Error');
+      err.message.should.equal('Position "8" is out of range "0-7".');
+    });
 
   it('should mark a credential revoked, encode and decode', async () => {
     const list = new StatusList({length: 100000});

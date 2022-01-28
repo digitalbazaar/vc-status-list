@@ -4,9 +4,9 @@
 ### Creating a StatusList2021Credential
 
 ```js
-const rl = require("vc-status-list");
+const sl = require("vc-status-list");
 const jsigs = require("jsonld-signatures");
-const { Ed25519KeyPair } = require("crypto-ld");
+const {Ed25519KeyPair} = require("crypto-ld");
 const vc = require("vc-js");
 const documentLoader = require("./path-to/document-loader.js");
 
@@ -22,9 +22,9 @@ const suite = new Ed25519Signature2018({
   date: "2019-12-11T03:50:55Z",
 });
 const id = "https://example.com/credentials/status/3";
-const list = await rl.createList({ length: 100000 });
+const list = await sl.createList({length: 100000});
 const encodedList = await list.encode();
-const rlCredential = {
+const slCredential = {
   "@context": ["https://www.w3.org/2018/credentials/v1", "https://w3id.org/vc/status-list/v1"],
   id,
   issuer: "did:key:z6MknUVLM84Eo5mQswCqP7f6oNER84rmVKkCvypob8UtBC8K",
@@ -37,7 +37,7 @@ const rlCredential = {
   },
 };
 let verifiableCredential = await vc.issue({
-  credential: { ...rlCredential },
+  credential: {...slCredential},
   suite,
   documentLoader,
 });
@@ -73,7 +73,7 @@ const credential = {
   },
 };
 let verifiableCredential = await vc.issue({
-  credential: { ...credential },
+  credential: {...credential},
   suite,
   documentLoader,
 });
