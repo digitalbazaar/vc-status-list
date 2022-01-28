@@ -7,7 +7,7 @@ import {
 import {extendContextLoader} from 'jsonld-signatures';
 import statusListCtx from 'vc-status-list-context';
 import vc from '@digitalbazaar/vc';
-import {assertRevocationList2020Context, getCredentialStatus} from '../main.js';
+import {assertStatusList2021Context, getCredentialStatus} from '../main.js';
 
 const {defaultDocumentLoader} = vc;
 
@@ -30,11 +30,11 @@ const RLC = {
   ],
   id: 'https://example.com/status/1',
   issuer: 'did:key:z6MknUVLM84Eo5mQswCqP7f6oNER84rmVKkCvypob8UtBC8K',
-  issuanceDate: '2020-03-10T04:24:12.164Z',
-  type: ['VerifiableCredential', 'RevocationList2020Credential'],
+  issuanceDate: '2021-03-10T04:24:12.164Z',
+  type: ['VerifiableCredential', 'StatusList2021Credential'],
   credentialSubject: {
     id: `https://example.com/status/1#list`,
-    type: 'RevocationList2020',
+    type: 'RevocationList2021',
     encodedList: encodedList100KWith50KthRevoked
   }
 };
@@ -74,7 +74,7 @@ describe('main', () => {
     list.length.should.equal(100000);
   });
 
-  it('should create a RevocationList2020Credential credential', async () => {
+  it('should create a StatusList2021Credential credential', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential({id, list});
@@ -85,10 +85,10 @@ describe('main', () => {
         VC_SL_CONTEXT_URL
       ],
       id,
-      type: ['VerifiableCredential', 'RevocationList2020Credential'],
+      type: ['VerifiableCredential', 'StatusList2021Credential'],
       credentialSubject: {
         id: `${id}#list`,
-        type: 'RevocationList2020',
+        type: 'RevocationList2021',
         encodedList: encodedList100k
       }
     });
@@ -108,9 +108,9 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2020Status',
-        revocationListIndex: '67342',
-        revocationListCredential: RLC.id
+        type: 'RevocationList2021Status',
+        statusListIndex: '67342',
+        statusListCredential: RLC.id
       },
       issuer: RLC.issuer,
     };
@@ -133,8 +133,8 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
         type: 'NotMatch',
-        revocationListIndex: '67342',
-        revocationListCredential: RLC.id
+        statusListIndex: '67342',
+        statusListCredential: RLC.id
       },
       issuer: RLC.issuer,
     };
@@ -156,14 +156,14 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2020Status',
-        revocationListIndex: '67342',
-        revocationListCredential: RLC.id
+        type: 'RevocationList2021Status',
+        statusListIndex: '67342',
+        statusListCredential: RLC.id
       },
       issuer: RLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyRevocationListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false});
     result.verified.should.equal(true);
   });
 
@@ -182,13 +182,13 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
         type: 'ex:NonmatchingStatusType',
-        revocationListIndex: '67342',
-        revocationListCredential: RLC.id
+        statusListIndex: '67342',
+        statusListCredential: RLC.id
       },
       issuer: RLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyRevocationListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false});
     result.verified.should.equal(false);
   });
 
@@ -206,13 +206,13 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2020Status',
-        revocationListCredential: RLC.id
+        type: 'RevocationList2021Status',
+        statusListCredential: RLC.id
       },
       issuer: RLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyRevocationListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false});
     result.verified.should.equal(false);
   });
 
@@ -230,13 +230,13 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2020Status',
-        revocationListIndex: '67342'
+        type: 'RevocationList2021Status',
+        statusListIndex: '67342'
       },
       issuer: RLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyRevocationListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false});
     result.verified.should.equal(false);
   });
 
@@ -254,14 +254,14 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2020Status',
-        revocationListIndex: '50000',
-        revocationListCredential: RLC.id
+        type: 'RevocationList2021Status',
+        statusListIndex: '50000',
+        statusListCredential: RLC.id
       },
       issuer: RLC.issuer,
     };
     const result = await checkStatus({
-      credential, documentLoader, verifyRevocationListCredential: false});
+      credential, documentLoader, verifyStatusListCredential: false});
     result.verified.should.equal(false);
   });
 
@@ -270,7 +270,7 @@ describe('main', () => {
     let result;
     try {
       result = await checkStatus({
-        documentLoader, verifyRevocationListCredential: false});
+        documentLoader, verifyStatusListCredential: false});
       result.verified.should.equal(false);
     } catch(e) {
       err = e;
@@ -302,11 +302,11 @@ describe('main', () => {
   });
 
   it('should fail to verify if credential is not an object for ' +
-    '"assertRevocationList2020Context"', async () => {
+    '"assertStatusList2021Context"', async () => {
     let err;
     let result;
     try {
-      result = assertRevocationList2020Context({credential: ''});
+      result = assertStatusList2021Context({credential: ''});
     } catch(e) {
       err = e;
     }
@@ -372,7 +372,7 @@ describe('main', () => {
   });
 
   it('should fail to verify if @context is not an array in ' +
-    '"assertRevocationList2020Context"', async () => {
+    '"assertStatusList2021Context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential({id, list});
@@ -381,7 +381,7 @@ describe('main', () => {
     try {
       // change the @context property to a string
       credential['@context'] = 'https://example.com/status/1';
-      result = assertRevocationList2020Context({credential});
+      result = assertStatusList2021Context({credential});
     } catch(e) {
       err = e;
     }
@@ -392,7 +392,7 @@ describe('main', () => {
   });
 
   it('should fail when the first "@context" value is unexpected in' +
-    '"assertRevocationList2020Context"', async () => {
+    '"assertStatusList2021Context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential({id, list});
@@ -401,7 +401,7 @@ describe('main', () => {
     try {
       // change the @context property intentionally to an unexpected value
       credential['@context'][0] = 'https://example.com/test/1';
-      result = assertRevocationList2020Context({credential});
+      result = assertStatusList2021Context({credential});
     } catch(e) {
       err = e;
     }
@@ -460,9 +460,9 @@ describe('main', () => {
       delete credential['@context'][1];
       credential.credentialStatus = {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2020Status',
-        revocationListIndex: '50000',
-        revocationListCredential: RLC.id
+        type: 'RevocationList2021Status',
+        statusListIndex: '50000',
+        statusListCredential: RLC.id
       };
       result = statusTypeMatches({credential});
     } catch(e) {
@@ -473,7 +473,7 @@ describe('main', () => {
   });
 
   it('should fail when "CONTEXTS.RL_V1" is not in "@contexts" ' +
-    'in "assertRevocationList2020"', async () => {
+    'in "assertStatusList2021Context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
     const credential = await createCredential({id, list});
@@ -481,7 +481,7 @@ describe('main', () => {
     let result;
     try {
       delete credential['@context'][1];
-      result = assertRevocationList2020Context({credential});
+      result = assertStatusList2021Context({credential});
     } catch(e) {
       err = e;
     }
@@ -525,8 +525,8 @@ describe('main', () => {
         },
         credentialStatus: {
           id: 'https://example.com/status/1#67342',
-          type: 'RevocationList2020Status',
-          revocationListCredential: RLC.id
+          type: 'RevocationList2021Status',
+          statusListCredential: RLC.id
         }
       };
       const documentLoader = 'https://example.com/status/1';
@@ -534,7 +534,7 @@ describe('main', () => {
       let result;
       try {
         result = await checkStatus({
-          credential, documentLoader, verifyRevocationListCredential: false});
+          credential, documentLoader, verifyStatusListCredential: false});
       } catch(e) {
         err = e;
       }
@@ -565,9 +565,9 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2020Status',
-        revocationListIndex: '50000',
-        revocationListCredential: RLC.id
+        type: 'RevocationList2021Status',
+        statusListIndex: '50000',
+        statusListCredential: RLC.id
       }
     };
     const documentLoader = extendContextLoader(async url => {
@@ -586,7 +586,7 @@ describe('main', () => {
     let result;
     try {
       result = await checkStatus({
-        credential, documentLoader, suite, verifyRevocationListCredential: true
+        credential, documentLoader, suite, verifyStatusListCredential: true
       });
     } catch(e) {
       err = e;
@@ -603,7 +603,7 @@ describe('main', () => {
       '"suite" must be an object or an array of objects');
   });
 
-  it('should fail to verify when "RevocationList2020Credential" ' +
+  it('should fail to verify when "StatusList2021Credential" ' +
     'is not valid', async () => {
     const credential = {
       '@context': [
@@ -612,17 +612,17 @@ describe('main', () => {
       ],
       id: 'urn:uuid:e74fb1d6-7926-11ea-8e11-10bf48838a41',
       issuer: 'exampleissuer',
-      issuanceDate: '2020-03-10T04:24:12.164Z',
-      type: ['VerifiableCredential', 'RevocationList2020Credential'],
+      issuanceDate: '2021-03-10T04:24:12.164Z',
+      type: ['VerifiableCredential', 'StatusList2021Credential'],
       credentialSubject: {
         id: 'urn:uuid:011e064e-7927-11ea-8975-10bf48838a41',
         'example:test': 'bar'
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2020Status',
-        revocationListIndex: 50000,
-        revocationListCredential: RLC.id
+        type: 'RevocationList2021Status',
+        statusListIndex: 50000,
+        statusListCredential: RLC.id
       }
     };
     let err;
@@ -631,7 +631,7 @@ describe('main', () => {
       delete credential.type[1];
       result = await checkStatus({
         credential, documentLoader,
-        suite: {}, verifyRevocationListCredential: true
+        suite: {}, verifyStatusListCredential: true
       });
     } catch(e) {
       err = e;
@@ -645,7 +645,7 @@ describe('main', () => {
     result.should.have.property('error');
     result.error.should.be.instanceof(Error);
     result.error.message.should.contain(
-      '"RevocationList2020Credential" not verified');
+      '"StatusList2021Credential" not verified');
   });
 
   it('should fail to verify for non-matching credential issuers', async () => {
@@ -662,9 +662,9 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2020Status',
-        revocationListIndex: '67342',
-        revocationListCredential: RLC.id,
+        type: 'RevocationList2021Status',
+        statusListIndex: '67342',
+        statusListCredential: RLC.id,
       },
       // this issuer does not match the issuer for the mock RLC specified
       // by `RLC.id` above
@@ -673,11 +673,11 @@ describe('main', () => {
     const result = await checkStatus({
       credential,
       documentLoader,
-      verifyRevocationListCredential: false,
+      verifyStatusListCredential: false,
       verifyMatchingIssuers: true,
     });
     result.verified.should.equal(false);
-    result.error.message.should.equal('Issuers of the revocation credential ' +
+    result.error.message.should.equal('Issuers of the status list credential ' +
       'and verifiable credential do not match.');
   });
 
@@ -696,9 +696,9 @@ describe('main', () => {
         },
         credentialStatus: {
           id: 'https://example.com/status/1#67342',
-          type: 'RevocationList2020Status',
-          revocationListIndex: '67342',
-          revocationListCredential: RLC.id,
+          type: 'RevocationList2021Status',
+          statusListIndex: '67342',
+          statusListCredential: RLC.id,
         },
         // this issuer does not match the issuer for the mock RLC specified
         // by `RLC.id` above
@@ -707,7 +707,7 @@ describe('main', () => {
       const result = await checkStatus({
         credential,
         documentLoader,
-        verifyRevocationListCredential: false,
+        verifyStatusListCredential: false,
         // this flag is set to allow different values for credential.issuer and
         // RLC.issuer
         verifyMatchingIssuers: false,

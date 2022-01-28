@@ -1,10 +1,10 @@
-# vc-revocation-list-2020
-[Verifiable Credential Revocation List 2020](https://github.com/digitalbazaar/vc-status-rl-2020)
+# vc-status-list
+[Verifiable Credential Status List](https://github.com/digitalbazaar/vc-status-list-2021)
 
-### Creating a RevocationList2020Credential
+### Creating a StatusList2021Credential
 
 ```js
-const rl = require("vc-revocation-list");
+const rl = require("vc-status-list");
 const jsigs = require("jsonld-signatures");
 const { Ed25519KeyPair } = require("crypto-ld");
 const vc = require("vc-js");
@@ -25,14 +25,14 @@ const id = "https://example.com/credentials/status/3";
 const list = await rl.createList({ length: 100000 });
 const encodedList = await list.encode();
 const rlCredential = {
-  "@context": ["https://www.w3.org/2018/credentials/v1", "https://w3id.org/vc-revocation-list-2020/v1"],
+  "@context": ["https://www.w3.org/2018/credentials/v1", "https://w3id.org/vc/status-list/v1"],
   id,
   issuer: "did:key:z6MknUVLM84Eo5mQswCqP7f6oNER84rmVKkCvypob8UtBC8K",
-  issuanceDate: "2020-03-10T04:24:12.164Z",
-  type: ["VerifiableCredential", "RevocationList2020Credential"],
+  issuanceDate: "2021-03-10T04:24:12.164Z",
+  type: ["VerifiableCredential", "StatusList2021Credential"],
   credentialSubject: {
     id: `${id}#list`,
-    type: "RevocationList2020",
+    type: "RevocationList2021",
     encodedList,
   },
 };
@@ -43,7 +43,7 @@ let verifiableCredential = await vc.issue({
 });
 ```
 
-### Created a Credential which uses a RevocationList2020
+### Created a Credential which uses a RevocationList2021
 
 ```js
 // see imports above
@@ -51,17 +51,17 @@ const credential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
     "https://www.w3.org/2018/credentials/examples/v1",
-    "https://w3id.org/vc-revocation-list-2020/v1",
+    "https://w3id.org/vc/status-list/v1",
   ],
   id: "https://example.com/credentials/3732",
   type: ["VerifiableCredential", "UniversityDegreeCredential"],
   issuer: "did:web:did.actor:alice",
-  issuanceDate: "2020-03-10T04:24:12.164Z",
+  issuanceDate: "2021-03-10T04:24:12.164Z",
   credentialStatus: {
     id: "https://example.com/credentials/status/3#94567",
-    type: "RevocationList2020Status",
-    revocationListIndex: "94567",
-    revocationListCredential:
+    type: "RevocationList2021Status",
+    statusListIndex: "94567",
+    statusListCredential:
       "https://did.actor/alice/credentials/status/3",
   },
   credentialSubject: {
