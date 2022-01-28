@@ -8,6 +8,7 @@ import credentialsCtx from 'credentials-context';
 
 const VC_V1_CONTEXT = credentialsCtx.constants.CREDENTIALS_CONTEXT_V1_URL;
 const SL_V1_CONTEXT = statusListCtx.constants.CONTEXT_URL_V1;
+
 export async function createList({length}) {
   return new StatusList({length});
 }
@@ -21,10 +22,10 @@ export async function createCredential({id, list}) {
   return {
     '@context': [VC_V1_CONTEXT, SL_V1_CONTEXT],
     id,
-    type: ['VerifiableCredential', 'RevocationList2020Credential'],
+    type: ['VerifiableCredential', 'StatusList2021Credential'],
     credentialSubject: {
       id: `${id}#list`,
-      type: 'RevocationList2020',
+      type: 'RevocationList2021',
       encodedList
     }
   };
@@ -34,7 +35,7 @@ export async function checkStatus({
   credential,
   documentLoader,
   suite,
-  verifyRevocationListCredential = true,
+  verifyStatusListCredential = true,
   verifyMatchingIssuers = true
 } = {}) {
   let result;
@@ -43,7 +44,7 @@ export async function checkStatus({
       credential,
       documentLoader,
       suite,
-      verifyRevocationListCredential,
+      verifyStatusListCredential,
       verifyMatchingIssuers,
     });
   } catch(error) {
@@ -80,14 +81,15 @@ export function statusTypeMatches({credential} = {}) {
     // context not present, no match
     return false;
   }
-  if(credentialStatus.type !== 'RevocationList2020Status') {
+  if(!(credentialStatus.type === 'RevocationList2021Status' ||
+    credentialStatus.type === 'SuspensionList2021Status')) {
     // status type does not match
     return false;
   }
   return true;
 }
 
-export function assertRevocationList2020Context({credential} = {}) {
+export function assertStatusList2021Context({credential} = {}) {
   if(!(credential && typeof credential === 'object')) {
     throw new TypeError('"credential" must be an object.');
   }
@@ -108,20 +110,22 @@ export function getCredentialStatus({credential} = {}) {
   if(!(credential && typeof credential === 'object')) {
     throw new TypeError('"credential" must be an object.');
   }
-  assertRevocationList2020Context({credential});
+  assertStatusList2021Context({credential});
   // get and validate status
   if(!(credential.credentialStatus &&
     typeof credential.credentialStatus === 'object')) {
     throw new Error('"credentialStatus" is missing or invalid.');
   }
   const {credentialStatus} = credential;
-  if(credentialStatus.type !== 'RevocationList2020Status') {
+  if(!(credentialStatus.type === 'RevocationList2021Status' ||
+    credentialStatus.type === 'SuspensionList2021Status')) {
     throw new Error(
-      '"credentialStatus" type is not "RevocationList2020Status".');
+      '"credentialStatus" type must be "RevocationList2021Status" or ' +
+        '"SuspensionList2021Status".');
   }
-  if(typeof credentialStatus.revocationListCredential !== 'string') {
+  if(typeof credentialStatus.statusListCredential !== 'string') {
     throw new TypeError(
-      '"credentialStatus" revocationListCredential must be a string.');
+      '"credentialStatus" statusListCredential must be a string.');
   }
 
   return credentialStatus;
@@ -131,7 +135,7 @@ async function _checkStatus({
   credential,
   documentLoader,
   suite,
-  verifyRevocationListCredential,
+  verifyStatusListCredential,
   verifyMatchingIssuers
 }) {
   if(!(credential && typeof credential === 'object')) {
@@ -140,7 +144,7 @@ async function _checkStatus({
   if(typeof documentLoader !== 'function') {
     throw new TypeError('"documentLoader" must be a function.');
   }
-  if(verifyRevocationListCredential && !(suite && (
+  if(verifyStatusListCredential && !(suite && (
     isArrayOfObjects(suite) ||
     (!Array.isArray(suite) && typeof suite === 'object')))) {
     throw new TypeError('"suite" must be an object or an array of objects.');
@@ -148,37 +152,36 @@ async function _checkStatus({
 
   const credentialStatus = getCredentialStatus({credential});
 
-  // get RL position
-  // TODO: bikeshed name
-  const {revocationListIndex} = credentialStatus;
-  const index = parseInt(revocationListIndex, 10);
+  // get SL position
+  const {statusListIndex} = credentialStatus;
+  const index = parseInt(statusListIndex, 10);
   if(isNaN(index)) {
-    throw new TypeError('"revocationListIndex" must be an integer.');
+    throw new TypeError('"statusListIndex" must be an integer.');
   }
 
-  // retrieve RL VC
-  let rlCredential;
+  // retrieve SL VC
+  let slCredential;
   try {
-    ({document: rlCredential} = await documentLoader(
-      credentialStatus.revocationListCredential));
+    ({document: slCredential} = await documentLoader(
+      credentialStatus.statusListCredential));
   } catch(e) {
     const err = new Error(
-      'Could not load "RevocationList2020Credential"; ' +
+      'Could not load "StatusList2021Credential"; ' +
       `reason: ${e.message}`);
     err.cause = e;
     throw err;
   }
 
-  // verify RL VC
-  if(verifyRevocationListCredential) {
+  // verify SL VC
+  if(verifyStatusListCredential) {
     const verifyResult = await vc.verifyCredential({
-      credential: rlCredential,
+      credential: slCredential,
       suite,
       documentLoader
     });
     if(!verifyResult.verified) {
       const {error: e} = verifyResult;
-      let msg = '"RevocationList2020Credential" not verified';
+      let msg = '"StatusList2021Credential" not verified';
       if(e) {
         msg += `; reason: ${e.message}`;
       } else {
@@ -193,31 +196,32 @@ async function _checkStatus({
   }
 
   // ensure that the issuer of the verifiable credential matches
-  // the issuer of the revocationListCredential
+  // the issuer of the statusListCredential
   if(verifyMatchingIssuers) {
     // covers both the URI and object cases
     const credentialIssuer =
       typeof credential.issuer === 'object' ?
         credential.issuer.id : credential.issuer;
-    const revocationListCredentialIssuer =
-      typeof rlCredential.issuer === 'object' ?
-        rlCredential.issuer.id : rlCredential.issuer;
+    const statusListCredentialIssuer =
+      typeof slCredential.issuer === 'object' ?
+        slCredential.issuer.id : slCredential.issuer;
 
-    if(!(credentialIssuer && revocationListCredentialIssuer) ||
-      (credentialIssuer !== revocationListCredentialIssuer)) {
-      throw new Error('Issuers of the revocation credential and verifiable ' +
+    if(!(credentialIssuer && statusListCredentialIssuer) ||
+      (credentialIssuer !== statusListCredentialIssuer)) {
+      throw new Error('Issuers of the status list credential and verifiable ' +
         'credential do not match.');
     }
   }
-
-  if(!rlCredential.type.includes('RevocationList2020Credential')) {
-    throw new Error('"RevocationList2020Credential" type is not valid.');
+  if(!slCredential.type.includes('StatusList2021Credential')) {
+    throw new Error(
+      'Status list credential must include "StatusList2021Credential" type.');
   }
 
   // get JSON RevocationList
-  const {credentialSubject: rl} = rlCredential;
-  if(rl.type !== 'RevocationList2020') {
-    throw new Error('"RevocationList2020" type is not valid.');
+  const {credentialSubject: rl} = slCredential;
+
+  if(rl.type !== 'RevocationList2021') {
+    throw new Error('Revocation list type must be "RevocationList2021".');
   }
 
   // decode list from RL VC
@@ -232,10 +236,10 @@ async function _checkStatus({
     throw err;
   }
 
-  // check VC's RL index for revocation status
+  // check VC's SL index for revocation status
   const verified = !list.isRevoked(index);
 
-  // TODO: return anything else? returning `rlCredential` may be too unwieldy
+  // TODO: return anything else? returning `slCredential` may be too unwieldy
   // given its potentially large size
   return {verified};
 }
