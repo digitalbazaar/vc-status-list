@@ -1,5 +1,5 @@
 # vc-status-list
-[Verifiable Credential Status List](https://github.com/digitalbazaar/vc-status-list-2021)
+[Verifiable Credential Status List](https://github.com/digitalbazaar/vc-status-list)
 
 ### Creating a StatusList2021Credential
 
