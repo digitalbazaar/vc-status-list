@@ -1,6 +1,6 @@
 {
   "name": "vc-status-list",
-  "version": "3.0.1-0",
+  "version": "0.0.1",
   "description": "Verifiable Credentials Status List",
   "license": "BSD-3-Clause",
   "main": "index.js",
