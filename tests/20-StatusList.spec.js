@@ -1,7 +1,7 @@
 /*!
  * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
  */
-import StatusList from '../StatusList.js';
+import {StatusList} from '../StatusList.js';
 
 const encodedList100k =
   'H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA';
@@ -54,25 +54,25 @@ describe('StatusList', () => {
     list.length.should.equal(100000);
   });
 
-  it('should mark a credential revoked', async () => {
+  it('should setStatus of a credential revoked', async () => {
     const list = new StatusList({length: 8});
-    list.isRevoked(0).should.equal(false);
-    list.isRevoked(1).should.equal(false);
-    list.isRevoked(2).should.equal(false);
-    list.isRevoked(3).should.equal(false);
-    list.isRevoked(4).should.equal(false);
-    list.isRevoked(5).should.equal(false);
-    list.isRevoked(6).should.equal(false);
-    list.isRevoked(7).should.equal(false);
-    list.setRevoked(4, true);
-    list.isRevoked(0).should.equal(false);
-    list.isRevoked(1).should.equal(false);
-    list.isRevoked(2).should.equal(false);
-    list.isRevoked(3).should.equal(false);
-    list.isRevoked(4).should.equal(true);
-    list.isRevoked(5).should.equal(false);
-    list.isRevoked(6).should.equal(false);
-    list.isRevoked(7).should.equal(false);
+    list.getStatus(0).should.equal(false);
+    list.getStatus(1).should.equal(false);
+    list.getStatus(2).should.equal(false);
+    list.getStatus(3).should.equal(false);
+    list.getStatus(4).should.equal(false);
+    list.getStatus(5).should.equal(false);
+    list.getStatus(6).should.equal(false);
+    list.getStatus(7).should.equal(false);
+    list.setStatus(4, true);
+    list.getStatus(0).should.equal(false);
+    list.getStatus(1).should.equal(false);
+    list.getStatus(2).should.equal(false);
+    list.getStatus(3).should.equal(false);
+    list.getStatus(4).should.equal(true);
+    list.getStatus(5).should.equal(false);
+    list.getStatus(6).should.equal(false);
+    list.getStatus(7).should.equal(false);
   });
 
   it('should fail to mark a credential revoked no "revoked" boolean param ' +
@@ -80,7 +80,7 @@ describe('StatusList', () => {
     const list = new StatusList({length: 8});
     let err;
     try {
-      list.setRevoked(0);
+      list.setStatus(0);
     } catch(e) {
       err = e;
     }
@@ -94,7 +94,7 @@ describe('StatusList', () => {
       const list = new StatusList({length: 8});
       let err;
       try {
-        list.isRevoked(8);
+        list.getStatus(8);
       } catch(e) {
         err = e;
       }
@@ -105,12 +105,12 @@ describe('StatusList', () => {
 
   it('should mark a credential revoked, encode and decode', async () => {
     const list = new StatusList({length: 100000});
-    list.isRevoked(50000).should.equal(false);
-    list.setRevoked(50000, true);
-    list.isRevoked(50000).should.equal(true);
+    list.getStatus(50000).should.equal(false);
+    list.setStatus(50000, true);
+    list.getStatus(50000).should.equal(true);
     const encodedList = await list.encode();
     encodedList.should.equal(encodedList100KWith50KthRevoked);
     const decodedList = await StatusList.decode({encodedList});
-    decodedList.isRevoked(50000).should.equal(true);
+    decodedList.getStatus(50000).should.equal(true);
   });
 });
