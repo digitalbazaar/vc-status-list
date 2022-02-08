@@ -15,7 +15,7 @@ describe('StatusList', () => {
     list.length.should.equal(8);
   });
 
-  it('should fail to create an instance if no length or buffer is provided',
+  it('should fail to create an instance if no length nor buffer is provided',
     async () => {
       let err;
       try {
@@ -54,7 +54,7 @@ describe('StatusList', () => {
     list.length.should.equal(100000);
   });
 
-  it('should setStatus of a credential revoked', async () => {
+  it('should mark a credential revoked', async () => {
     const list = new StatusList({length: 8});
     list.getStatus(0).should.equal(false);
     list.getStatus(1).should.equal(false);
@@ -75,8 +75,8 @@ describe('StatusList', () => {
     list.getStatus(7).should.equal(false);
   });
 
-  it('should fail to mark a credential revoked no "revoked" boolean param ' +
-    'is passed', async () => {
+  it('should fail to mark a credential revoked if no "revokedStatus" boolean ' +
+    'param is passed', async () => {
     const list = new StatusList({length: 8});
     let err;
     try {
@@ -86,7 +86,7 @@ describe('StatusList', () => {
     }
     should.exist(err);
     err.name.should.equal('TypeError');
-    err.message.should.equal('"revoked" must be a boolean.');
+    err.message.should.equal('"revokedStatus" must be a boolean.');
   });
 
   it('should fail to get a credential status for position that is out of range',
