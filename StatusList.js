@@ -3,7 +3,7 @@
  */
 import Bitstring from '@digitalbazaar/bitstring';
 
-export default class StatusList {
+class RevocationList {
   constructor({length, buffer} = {}) {
     this.bitstring = new Bitstring({length, buffer});
     this.length = this.bitstring.length;
@@ -18,6 +18,12 @@ export default class StatusList {
 
   isRevoked(index) {
     return this.bitstring.get(index);
+  }
+}
+
+export default class StatusList extends RevocationList {
+  constructor({length, buffer} = {}) {
+    super({length, buffer});
   }
 
   async encode() {
