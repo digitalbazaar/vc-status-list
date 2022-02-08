@@ -66,8 +66,8 @@ export function statusTypeMatches({credential} = {}) {
     throw new TypeError('"@context" must be an array.');
   }
   if(contexts[0] !== VC_V1_CONTEXT_URL) {
-    throw new Error(`The first "@context" value must be ' +
-      '"${VC_V1_CONTEXT_URL}".`);
+    throw new Error(
+      `The first "@context" value must be "${VC_V1_CONTEXT_URL}".`);
   }
   const {credentialStatus} = credential;
   if(!credentialStatus) {
@@ -100,8 +100,8 @@ export function assertStatusList2021Context({credential} = {}) {
     throw new TypeError('"@context" must be an array.');
   }
   if(contexts[0] !== VC_V1_CONTEXT_URL) {
-    throw new Error(`The first "@context" value must be ' +
-      '"${VC_V1_CONTEXT_URL}".`);
+    throw new Error(
+      `The first "@context" value must be "${VC_V1_CONTEXT_URL}".`);
   }
   if(!contexts.includes(SL_V1_CONTEXT_URL)) {
     throw new TypeError(`"@context" must include "${SL_V1_CONTEXT_URL}".`);
@@ -122,12 +122,12 @@ export function getCredentialStatus({credential} = {}) {
   if(!(credentialStatus.type === 'RevocationList2021Status' ||
     credentialStatus.type === 'SuspensionList2021Status')) {
     throw new Error(
-      '"credentialStatus" type must be "RevocationList2021Status" or ' +
+      '"credentialStatus.type" must be "RevocationList2021Status" or ' +
         '"SuspensionList2021Status".');
   }
   if(typeof credentialStatus.statusListCredential !== 'string') {
     throw new TypeError(
-      '"credentialStatus" statusListCredential must be a string.');
+      '"credentialStatus.statusListCredential" must be a string.');
   }
 
   return credentialStatus;
@@ -210,13 +210,14 @@ async function _checkStatus({
 
     if(!(credentialIssuer && statusListCredentialIssuer) ||
       (credentialIssuer !== statusListCredentialIssuer)) {
-      throw new Error('Issuers of the status list credential and verifiable ' +
+      throw new Error(
+        'Issuers of the status list credential and verifiable ' +
         'credential do not match.');
     }
   }
   if(!slCredential.type.includes('StatusList2021Credential')) {
     throw new Error(
-      'Status list credential must include "StatusList2021Credential" type.');
+      'Status list credential type must include "StatusList2021Credential".');
   }
 
   // get JSON RevocationList

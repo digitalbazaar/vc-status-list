@@ -178,7 +178,7 @@ describe('main', () => {
     });
     result.verified.should.equal(false);
     should.exist(result.error);
-    result.error.message.should.equal('"credentialStatus" type must be ' +
+    result.error.message.should.equal('"credentialStatus.type" must be ' +
       '"RevocationList2021Status" or "SuspensionList2021Status".');
   });
 
@@ -234,8 +234,8 @@ describe('main', () => {
       });
       result.verified.should.equal(false);
       should.exist(result.error);
-      result.error.message.should.equal('"credentialStatus" ' +
-        'statusListCredential must be a string.');
+      result.error.message.should.equal(
+        '"credentialStatus.statusListCredential" must be a string.');
     });
 
   it('should fail to verify status for revoked credential', async () => {
@@ -330,8 +330,8 @@ describe('main', () => {
     });
     result.verified.should.equal(false);
     should.exist(result.error);
-    result.error.message.should.equal('Status list credential must include ' +
-      '"StatusList2021Credential" type.');
+    result.error.message.should.equal('Status list credential type must ' +
+      'include "StatusList2021Credential".');
   });
 
   it('should fail to verify status if "credentialSubject" type is not ' +
@@ -858,5 +858,4 @@ describe('main', () => {
       });
       result.verified.should.equal(true);
     });
-
 });
