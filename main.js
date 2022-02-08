@@ -1,7 +1,7 @@
 /*!
  * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
  */
-import StatusList from './StatusList.js';
+import {StatusList} from './StatusList.js';
 import vc from '@digitalbazaar/vc';
 import statusListCtx from 'vc-status-list-context';
 import credentialsCtx from 'credentials-context';
@@ -239,7 +239,7 @@ async function _checkStatus({
   }
 
   // check VC's SL index for revocation status
-  const verified = !list.isRevoked(index);
+  const verified = !list.getStatus(index);
 
   // TODO: return anything else? returning `slCredential` may be too unwieldy
   // given its potentially large size
