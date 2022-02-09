@@ -9,11 +9,11 @@ export class StatusList {
     this.length = this.bitstring.length;
   }
 
-  setStatus(index, revokedStatus) {
-    if(typeof revokedStatus !== 'boolean') {
-      throw new TypeError('"revokedStatus" must be a boolean.');
+  setStatus(index, status) {
+    if(typeof status !== 'boolean') {
+      throw new TypeError('"status" must be a boolean.');
     }
-    return this.bitstring.set(index, revokedStatus);
+    return this.bitstring.set(index, status);
   }
 
   getStatus(index) {
