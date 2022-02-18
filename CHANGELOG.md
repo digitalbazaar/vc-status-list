@@ -1,5 +1,10 @@
 # vc-status-list ChangeLog
 
+## 2.0.0 - 2022-02-TBD
+
+### Changed
+- **BREAKING**: Renamed package to `@digitalbazaar/vc-status-list`.
+
 ## 1.0.0 - 2022-02-09
 
 ### Changed

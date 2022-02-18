@@ -4,7 +4,7 @@
 ### Creating a StatusList2021Credential
 
 ```js
-const sl = require("vc-status-list");
+const sl = require("@digitalbazaar/vc-status-list");
 const jsigs = require("jsonld-signatures");
 const {Ed25519KeyPair} = require("crypto-ld");
 const vc = require("vc-js");
