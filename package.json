@@ -1,5 +1,5 @@
 {
-  "name": "vc-status-list",
+  "name": "@digitalbazaar/vc-status-list",
   "version": "1.0.1-0",
   "description": "Verifiable Credentials Status List",
   "license": "BSD-3-Clause",
