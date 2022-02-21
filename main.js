@@ -108,7 +108,7 @@ export function assertStatusList2021Context({credential} = {}) {
   }
 }
 
-export function getCredentialStatus({credential} = {}) {
+export function getCredentialStatus({credential, statusType} = {}) {
   if(!(credential && typeof credential === 'object')) {
     throw new TypeError('"credential" must be an object.');
   }
@@ -119,6 +119,16 @@ export function getCredentialStatus({credential} = {}) {
     throw new Error('"credentialStatus" is missing or invalid.');
   }
   const {credentialStatus} = credential;
+  const credentialStatuses = Array.isArray(credentialStatus) ? credentialStatus : [credentialStatus];
+  const results = credentialStatuses.map(credentialStatus => _validateStatus({credentialStatus})).
+    find(cs => cs.type === statusType);
+  if(results.length === 0) {
+      throw new Error(`credentialStatus type "${statusType}" not found.`);
+  }
+  return results;
+}
+
+function _validateStatus({credentialStatus}) {
   if(!(credentialStatus.type === 'RevocationList2021Status' ||
     credentialStatus.type === 'SuspensionList2021Status')) {
     throw new Error(
@@ -129,7 +139,6 @@ export function getCredentialStatus({credential} = {}) {
     throw new TypeError(
       '"credentialStatus.statusListCredential" must be a string.');
   }
-
   return credentialStatus;
 }
 
