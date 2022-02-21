@@ -120,9 +120,9 @@ export function getCredentialStatus({credential, statusType} = {}) {
   }
   const {credentialStatus} = credential;
   const credentialStatuses = Array.isArray(credentialStatus) ? credentialStatus : [credentialStatus];
-  const results = credentialStatuses.map(credentialStatus => _validateStatus({credentialStatus})).
+  const result = credentialStatuses.filter(credentialStatus => _validateStatus({credentialStatus})).
     find(cs => cs.type === statusType);
-  if(results.length === 0) {
+  if(!result) {
       throw new Error(`credentialStatus type "${statusType}" not found.`);
   }
   return results;
