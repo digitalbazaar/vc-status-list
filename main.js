@@ -57,9 +57,7 @@ export async function checkStatus({
 }
 
 export function statusTypeMatches({credential} = {}) {
-  if(!(credential && typeof credential === 'object')) {
-    throw new TypeError('"credential" must be an object.');
-  }
+  _isVC({credential});
   // check for expected contexts
   const {'@context': contexts} = credential;
   if(!Array.isArray(contexts)) {
@@ -91,9 +89,7 @@ export function statusTypeMatches({credential} = {}) {
 }
 
 export function assertStatusList2021Context({credential} = {}) {
-  if(!(credential && typeof credential === 'object')) {
-    throw new TypeError('"credential" must be an object.');
-  }
+  _isVC({credential});
   // check for expected contexts
   const {'@context': contexts} = credential;
   if(!Array.isArray(contexts)) {
@@ -109,9 +105,7 @@ export function assertStatusList2021Context({credential} = {}) {
 }
 
 export function getCredentialStatus({credential, statusType} = {}) {
-  if(!(credential && typeof credential === 'object')) {
-    throw new TypeError('"credential" must be an object.');
-  }
+  _isVC({credential});
   assertStatusList2021Context({credential});
   // get and validate status
   if(!(credential.credentialStatus &&
@@ -119,13 +113,15 @@ export function getCredentialStatus({credential, statusType} = {}) {
     throw new Error('"credentialStatus" is missing or invalid.');
   }
   const {credentialStatus} = credential;
-  const credentialStatuses = Array.isArray(credentialStatus) ? credentialStatus : [credentialStatus];
-  const result = credentialStatuses.filter(credentialStatus => _validateStatus({credentialStatus})).
-    find(cs => cs.type === statusType);
+  const credentialStatuses = Array.isArray(credentialStatus) ?
+    credentialStatus : [credentialStatus];
+  const result = credentialStatuses.filter(
+    credentialStatus => _validateStatus({credentialStatus})).find(
+    cs => cs.type === statusType);
   if(!result) {
-      throw new Error(`credentialStatus type "${statusType}" not found.`);
+    throw new Error(`credentialStatus type "${statusType}" not found.`);
   }
-  return results;
+  return result;
 }
 
 function _validateStatus({credentialStatus}) {
@@ -142,6 +138,12 @@ function _validateStatus({credentialStatus}) {
   return credentialStatus;
 }
 
+function _isVC({credential}) {
+  if(!(credential && typeof credential === 'object')) {
+    throw new TypeError('"credential" must be an object.');
+  }
+}
+
 async function _checkStatus({
   credential,
   documentLoader,
@@ -149,9 +151,7 @@ async function _checkStatus({
   verifyStatusListCredential,
   verifyMatchingIssuers
 }) {
-  if(!(credential && typeof credential === 'object')) {
-    throw new TypeError('"credential" must be an object.');
-  }
+  _isVC({credential});
   if(typeof documentLoader !== 'function') {
     throw new TypeError('"documentLoader" must be a function.');
   }
