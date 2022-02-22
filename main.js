@@ -119,7 +119,7 @@ export function getCredentialStatus({credential, statusType} = {}) {
     throw new Error('"credentialStatus" is missing or invalid.');
   }
   const credentialStatuses = _getStatuses({credential});
-    const result = credentialStatuses.filter(
+  const result = credentialStatuses.filter(
     credentialStatus => _validateStatus({credentialStatus})).find(
     cs => cs.type === expectedType);
   if(!result) {
@@ -135,9 +135,20 @@ function _validateStatus({credentialStatus}) {
       '"credentialStatus.type" must be "RevocationList2021Status" or ' +
         '"SuspensionList2021Status".');
   }
+  if(typeof credentialStatus.id !== 'string') {
+    throw new TypeError(
+      '"credentialStatus.id" must be a string.');
+  }
   if(typeof credentialStatus.statusListCredential !== 'string') {
     throw new TypeError(
       '"credentialStatus.statusListCredential" must be a string.');
+  }
+  const index = parseInt(credentialStatus.statusListIndex, 10);
+  if(isNaN(index)) {
+    throw new TypeError('"statusListIndex" must be an integer.');
+  }
+  if(credentialStatus.id === credentialStatus.statusListCredential) {
+    throw new Error('"credentialStatus.id" must not be "credentialStatus.statusListCredential".');
   }
   return credentialStatus;
 }
@@ -185,10 +196,6 @@ async function _checkStatus({
   // get SL position
   const {statusListIndex} = credentialStatus;
   const index = parseInt(statusListIndex, 10);
-  if(isNaN(index)) {
-    throw new TypeError('"statusListIndex" must be an integer.');
-  }
-
   // retrieve SL VC
   let slCredential;
   try {
@@ -294,6 +301,7 @@ async function _checkStatuses({
   }
 
   const credentialStatuses = _getStatuses({credential});
+  credentialStatuses.forEach(credentialStatus => _validateStatus({credentialStatus}));
   const results = await Promise.all(credentialStatuses.map(
     credentialStatus => _checkStatus({
       credential,
