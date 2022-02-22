@@ -40,7 +40,7 @@ export async function checkStatus({
 } = {}) {
   let result;
   try {
-    result = await _checkStatus({
+    result = await _checkStatuses({
       credential,
       documentLoader,
       suite,
@@ -57,7 +57,7 @@ export async function checkStatus({
 }
 
 export function statusTypeMatches({credential} = {}) {
-  _isVC({credential});
+  _isObject({credential});
   // check for expected contexts
   const {'@context': contexts} = credential;
   if(!Array.isArray(contexts)) {
@@ -89,7 +89,7 @@ export function statusTypeMatches({credential} = {}) {
 }
 
 export function assertStatusList2021Context({credential} = {}) {
-  _isVC({credential});
+  _isObject({credential});
   // check for expected contexts
   const {'@context': contexts} = credential;
   if(!Array.isArray(contexts)) {
@@ -105,16 +105,14 @@ export function assertStatusList2021Context({credential} = {}) {
 }
 
 export function getCredentialStatus({credential, statusType} = {}) {
-  _isVC({credential});
+  _isObject({credential});
   assertStatusList2021Context({credential});
   // get and validate status
   if(!(credential.credentialStatus &&
     typeof credential.credentialStatus === 'object')) {
     throw new Error('"credentialStatus" is missing or invalid.');
   }
-  const {credentialStatus} = credential;
-  const credentialStatuses = Array.isArray(credentialStatus) ?
-    credentialStatus : [credentialStatus];
+  const credentialStatuses = _getStatuses({credential});
   const result = credentialStatuses.filter(
     credentialStatus => _validateStatus({credentialStatus})).find(
     cs => cs.type === statusType);
@@ -138,31 +136,46 @@ function _validateStatus({credentialStatus}) {
   return credentialStatus;
 }
 
-function _isVC({credential}) {
+/**
+ * Checks if a credential is not falsey and an object.
+ *
+ * @param {object} options to use.
+ * @param {object} [options.credential] - A potential VC.
+ *
+ * @throws - Throws if the credential is falsey or not an object.
+ *
+ * @returns {undefined}
+ */
+function _isObject({credential}) {
   if(!(credential && typeof credential === 'object')) {
     throw new TypeError('"credential" must be an object.');
   }
 }
 
+/**
+ * Gets the statuses of a credential.
+ *
+ * @param {object} options - Options to use.
+ * @param {object} options.credential - A VC with a credentialStatus.
+ *
+ * @returns {Array<object>} An array of statuses.
+ */
+function _getStatuses({credential}) {
+  const {credentialStatus} = credential;
+  if(Array.isArray(credentialStatus)) {
+    return credentialStatus;
+  }
+  return [credentialStatus];
+}
+
 async function _checkStatus({
   credential,
-  documentLoader,
-  suite,
+  credentialStatus,
   verifyStatusListCredential,
-  verifyMatchingIssuers
+  verifyMatchingIssuers,
+  suite,
+  documentLoader
 }) {
-  _isVC({credential});
-  if(typeof documentLoader !== 'function') {
-    throw new TypeError('"documentLoader" must be a function.');
-  }
-  if(verifyStatusListCredential && !(suite && (
-    isArrayOfObjects(suite) ||
-    (!Array.isArray(suite) && typeof suite === 'object')))) {
-    throw new TypeError('"suite" must be an object or an array of objects.');
-  }
-
-  const credentialStatus = getCredentialStatus({credential});
-
   // get SL position
   const {statusListIndex} = credentialStatus;
   const index = parseInt(statusListIndex, 10);
@@ -254,6 +267,37 @@ async function _checkStatus({
   // TODO: return anything else? returning `slCredential` may be too unwieldy
   // given its potentially large size
   return {verified};
+
+}
+
+async function _checkStatuses({
+  credential,
+  documentLoader,
+  suite,
+  verifyStatusListCredential,
+  verifyMatchingIssuers
+}) {
+  _isObject({credential});
+  if(typeof documentLoader !== 'function') {
+    throw new TypeError('"documentLoader" must be a function.');
+  }
+  if(verifyStatusListCredential && !(suite && (
+    isArrayOfObjects(suite) ||
+    (!Array.isArray(suite) && typeof suite === 'object')))) {
+    throw new TypeError('"suite" must be an object or an array of objects.');
+  }
+
+  const credentialStatuses = _getStatuses({credential});
+  const verified = await Promise.all(credentialStatuses.map(
+    credentialStatus => _checkStatus({
+      credential,
+      credentialStatus,
+      suite,
+      documentLoader,
+      verifyStatusListCredential,
+      verifyMatchingIssuers
+    })));
+  return verified.every(({verified = false} = {}) => verified === true);
 }
 
 function isArrayOfObjects(x) {
