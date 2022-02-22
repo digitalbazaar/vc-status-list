@@ -107,15 +107,21 @@ export function assertStatusList2021Context({credential} = {}) {
 export function getCredentialStatus({credential, statusType} = {}) {
   _isObject({credential});
   assertStatusList2021Context({credential});
+  // statusType can be `revoked` or `suspended`
+  const statusTypes = {
+    revoked: 'RevocationList2021Status',
+    suspended: 'SuspensionList2021Status'
+  };
+  const expectedType = statusTypes[statusType] || statusType;
   // get and validate status
   if(!(credential.credentialStatus &&
     typeof credential.credentialStatus === 'object')) {
     throw new Error('"credentialStatus" is missing or invalid.');
   }
   const credentialStatuses = _getStatuses({credential});
-  const result = credentialStatuses.filter(
+    const result = credentialStatuses.filter(
     credentialStatus => _validateStatus({credentialStatus})).find(
-    cs => cs.type === statusType);
+    cs => cs.type === expectedType);
   if(!result) {
     throw new Error(`credentialStatus type "${statusType}" not found.`);
   }
