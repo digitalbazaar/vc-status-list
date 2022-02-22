@@ -80,12 +80,17 @@ export function statusTypeMatches({credential} = {}) {
     // context not present, no match
     return false;
   }
-  if(!(credentialStatus.type === 'RevocationList2021Status' ||
-    credentialStatus.type === 'SuspensionList2021Status')) {
-    // status type does not match
-    return false;
-  }
-  return true;
+  const credentialStatuses = _getStatuses({credential});
+  // at least one "credentialStatus.type" must match
+  // RevocationList2021Status or SuspensionList2021Status
+  return credentialStatuses.some(credentialStatus => {
+    if(!(credentialStatus.type === 'RevocationList2021Status' ||
+      credentialStatus.type === 'SuspensionList2021Status')) {
+      // status type does not match
+      return false;
+    }
+    return true;
+  })
 }
 
 export function assertStatusList2021Context({credential} = {}) {
@@ -299,7 +304,8 @@ async function _checkStatuses({
     (!Array.isArray(suite) && typeof suite === 'object')))) {
     throw new TypeError('"suite" must be an object or an array of objects.');
   }
-
+  // check the credential for correct status type
+  statusTypeMatches({credential});
   const credentialStatuses = _getStatuses({credential});
   credentialStatuses.forEach(credentialStatus => _validateStatus({credentialStatus}));
   const results = await Promise.all(credentialStatuses.map(
