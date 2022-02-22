@@ -288,7 +288,7 @@ async function _checkStatuses({
   }
 
   const credentialStatuses = _getStatuses({credential});
-  const verified = await Promise.all(credentialStatuses.map(
+  const results = await Promise.all(credentialStatuses.map(
     credentialStatus => _checkStatus({
       credential,
       credentialStatus,
@@ -297,7 +297,8 @@ async function _checkStatuses({
       verifyStatusListCredential,
       verifyMatchingIssuers
     })));
-  return verified.every(({verified = false} = {}) => verified === true);
+  const verified = results.every(({verified = false} = {}) => verified === true);
+  return {verified};
 }
 
 function isArrayOfObjects(x) {
