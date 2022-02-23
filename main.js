@@ -133,63 +133,6 @@ export function getCredentialStatus({credential, statusType} = {}) {
   return result;
 }
 
-function _validateStatus({credentialStatus}) {
-  if(!(credentialStatus.type === 'RevocationList2021Status' ||
-    credentialStatus.type === 'SuspensionList2021Status')) {
-    throw new Error(
-      '"credentialStatus.type" must be "RevocationList2021Status" or ' +
-        '"SuspensionList2021Status".');
-  }
-  if(typeof credentialStatus.id !== 'string') {
-    throw new TypeError(
-      '"credentialStatus.id" must be a string.');
-  }
-  if(typeof credentialStatus.statusListCredential !== 'string') {
-    throw new TypeError(
-      '"credentialStatus.statusListCredential" must be a string.');
-  }
-  const index = parseInt(credentialStatus.statusListIndex, 10);
-  if(isNaN(index)) {
-    throw new TypeError('"statusListIndex" must be an integer.');
-  }
-  if(credentialStatus.id === credentialStatus.statusListCredential) {
-    throw new Error('"credentialStatus.id" must not be ' +
-      '"credentialStatus.statusListCredential".');
-  }
-  return credentialStatus;
-}
-
-/**
- * Checks if a credential is not falsey and an object.
- *
- * @param {object} options to use.
- * @param {object} [options.credential] - A potential VC.
- *
- * @throws - Throws if the credential is falsey or not an object.
- *
- * @returns {undefined}
- */
-function _isObject({credential}) {
-  if(!(credential && typeof credential === 'object')) {
-    throw new TypeError('"credential" must be an object.');
-  }
-}
-
-/**
- * Gets the statuses of a credential.
- *
- * @param {object} options - Options to use.
- * @param {object} options.credential - A VC with a credentialStatus.
- *
- * @returns {Array<object>} An array of statuses.
- */
-function _getStatuses({credential}) {
-  const {credentialStatus} = credential;
-  if(Array.isArray(credentialStatus)) {
-    return credentialStatus;
-  }
-  return [credentialStatus];
-}
 
 async function _checkStatus({
   credential,
@@ -322,7 +265,79 @@ async function _checkStatuses({
   return {verified};
 }
 
+/**
+ * Takes in a credentialStatus an ensures it meets the
+ * normative statements from the Status List 2021 spec.
+ *
+ * @see https://w3c-ccg.github.io/vc-status-list-2021/
+ *
+ * @param {object} options - Options to use.
+ * @param {object} options.credentialStatus - A credentialStatus.
+ *
+ * @throws - An error if the credentialStatus is non-normative.
+ *
+ * @returns {object} A credentialStatus.
+ */
+function _validateStatus({credentialStatus}) {
+  if(!(credentialStatus.type === 'RevocationList2021Status' ||
+    credentialStatus.type === 'SuspensionList2021Status')) {
+    throw new Error(
+      '"credentialStatus.type" must be "RevocationList2021Status" or ' +
+        '"SuspensionList2021Status".');
+  }
+  if(typeof credentialStatus.id !== 'string') {
+    throw new TypeError(
+      '"credentialStatus.id" must be a string.');
+  }
+  if(typeof credentialStatus.statusListCredential !== 'string') {
+    throw new TypeError(
+      '"credentialStatus.statusListCredential" must be a string.');
+  }
+  const index = parseInt(credentialStatus.statusListIndex, 10);
+  if(isNaN(index)) {
+    throw new TypeError('"statusListIndex" must be an integer.');
+  }
+  if(credentialStatus.id === credentialStatus.statusListCredential) {
+    throw new Error('"credentialStatus.id" must not be ' +
+      '"credentialStatus.statusListCredential".');
+  }
+  return credentialStatus;
+}
+
+/**
+ * Checks if a credential is not falsey and an object.
+ *
+ * @param {object} options to use.
+ * @param {object} [options.credential] - A potential VC.
+ *
+ * @throws - Throws if the credential is falsey or not an object.
+ *
+ * @returns {undefined}
+ */
+function _isObject({credential}) {
+  if(!(credential && typeof credential === 'object')) {
+    throw new TypeError('"credential" must be an object.');
+  }
+}
+
+/**
+ * Gets the statuses of a credential.
+ *
+ * @param {object} options - Options to use.
+ * @param {object} options.credential - A VC with a credentialStatus.
+ *
+ * @returns {Array<object>} An array of statuses.
+ */
+function _getStatuses({credential}) {
+  const {credentialStatus} = credential;
+  if(Array.isArray(credentialStatus)) {
+    return credentialStatus;
+  }
+  return [credentialStatus];
+}
+
 function isArrayOfObjects(x) {
   return Array.isArray(x) && x.length > 0 &&
     x.every(x => x && typeof x === 'object');
 }
+
