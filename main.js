@@ -83,14 +83,14 @@ export function statusTypeMatches({credential} = {}) {
   const credentialStatuses = _getStatuses({credential});
   // at least one "credentialStatus.type" must match
   // RevocationList2021Status or SuspensionList2021Status
-  return credentialStatuses.some(credentialStatus => {
+  return credentialStatuses.every(credentialStatus => {
     if(!(credentialStatus.type === 'RevocationList2021Status' ||
       credentialStatus.type === 'SuspensionList2021Status')) {
       // status type does not match
       return false;
     }
     return true;
-  })
+  });
 }
 
 export function assertStatusList2021Context({credential} = {}) {
@@ -153,7 +153,8 @@ function _validateStatus({credentialStatus}) {
     throw new TypeError('"statusListIndex" must be an integer.');
   }
   if(credentialStatus.id === credentialStatus.statusListCredential) {
-    throw new Error('"credentialStatus.id" must not be "credentialStatus.statusListCredential".');
+    throw new Error('"credentialStatus.id" must not be ' +
+      '"credentialStatus.statusListCredential".');
   }
   return credentialStatus;
 }
@@ -304,10 +305,9 @@ async function _checkStatuses({
     (!Array.isArray(suite) && typeof suite === 'object')))) {
     throw new TypeError('"suite" must be an object or an array of objects.');
   }
-  // check the credential for correct status type
-  statusTypeMatches({credential});
   const credentialStatuses = _getStatuses({credential});
-  credentialStatuses.forEach(credentialStatus => _validateStatus({credentialStatus}));
+  credentialStatuses.forEach(
+    credentialStatus => _validateStatus({credentialStatus}));
   const results = await Promise.all(credentialStatuses.map(
     credentialStatus => _checkStatus({
       credential,
@@ -317,7 +317,8 @@ async function _checkStatuses({
       verifyStatusListCredential,
       verifyMatchingIssuers
     })));
-  const verified = results.every(({verified = false} = {}) => verified === true);
+  const verified = results.every(
+    ({verified = false} = {}) => verified === true);
   return {verified};
 }
 
