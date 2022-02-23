@@ -109,6 +109,17 @@ export function assertStatusList2021Context({credential} = {}) {
   }
 }
 
+/**
+ * Gets a credentialStatus of a statusType.
+ *
+ * @param {object} options - Options to use.
+ * @param {object} options.credential - A VC.
+ * @param {'revoked'|'suspended'} options.statusType - A statusType.
+ *
+ * @throws If the credentialStatus is invalid or missing.
+ *
+ * @returns {object} The resulting status of the given type.
+ */
 export function getCredentialStatus({credential, statusType} = {}) {
   _isObject({credential});
   assertStatusList2021Context({credential});
@@ -132,7 +143,6 @@ export function getCredentialStatus({credential, statusType} = {}) {
   }
   return result;
 }
-
 
 async function _checkStatus({
   credential,
