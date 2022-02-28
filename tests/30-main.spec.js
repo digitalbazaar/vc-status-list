@@ -153,6 +153,37 @@ describe('main', () => {
     result.verified.should.equal(true);
   });
 
+  it('should verify a VC with more than one status.', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: [{
+        id: 'https://example.com/status/1#67342',
+        type: 'SuspensionList2021Status',
+        statusListIndex: '67342',
+        statusListCredential: SLC.id
+      }, {
+        id: 'https://example.com/status/1#67342',
+        type: 'RevocationList2021Status',
+        statusListIndex: '67342',
+        statusListCredential: SLC.id
+      }],
+      issuer: SLC.issuer,
+    };
+    const result = await checkStatus({
+      credential, documentLoader, verifyStatusListCredential: false
+    });
+    result.verified.should.equal(true);
+  });
+
   it('should fail to verify status with incorrect status type', async () => {
     const credential = {
       '@context': [
@@ -171,6 +202,40 @@ describe('main', () => {
         statusListIndex: '67342',
         statusListCredential: SLC.id
       },
+      issuer: SLC.issuer,
+    };
+    const result = await checkStatus({
+      credential, documentLoader, verifyStatusListCredential: false
+    });
+    result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal('"credentialStatus.type" must be ' +
+      '"RevocationList2021Status" or "SuspensionList2021Status".');
+  });
+
+  it('should fail to verify VC with one incorrect status type', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: [{
+        id: 'https://example.com/status/1#67342',
+        type: 'RevocationList2021Status',
+        statusListIndex: '67342',
+        statusListCredential: SLC.id
+      }, {
+        id: 'https://example.com/status/1#67342',
+        type: 'ex:NonmatchingStatusType',
+        statusListIndex: '67342',
+        statusListCredential: SLC.id
+      }],
       issuer: SLC.issuer,
     };
     const result = await checkStatus({
