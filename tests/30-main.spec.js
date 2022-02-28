@@ -153,7 +153,7 @@ describe('main', () => {
     result.verified.should.equal(true);
   });
 
-  it('should verify a VC with more than one status.', async () => {
+  it('should verify the statuses of a credential.', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
