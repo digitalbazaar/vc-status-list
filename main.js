@@ -110,7 +110,7 @@ export function assertStatusList2021Context({credential} = {}) {
 }
 
 /**
- * Gets a credentialStatus of a statusType.
+ * Gets the `credentialStatus` of a specific type (`statusType`) of a credential.
  *
  * @param {object} options - Options to use.
  * @param {object} options.credential - A VC.
