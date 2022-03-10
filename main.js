@@ -239,7 +239,6 @@ async function _checkStatus({
   // TODO: return anything else? returning `slCredential` may be too unwieldy
   // given its potentially large size
   return {verified};
-
 }
 
 async function _checkStatuses({
