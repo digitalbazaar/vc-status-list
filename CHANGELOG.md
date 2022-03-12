@@ -1,6 +1,6 @@
 # vc-status-list ChangeLog
 
-## 2.1.0 - TBD
+## 2.1.0 - 2022-03-12
 
 ### Added
 - New API `getCredentialStatus` gets a status by type from a VC.
