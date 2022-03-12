@@ -7,6 +7,8 @@
 
 ### Changed
 - VCs can have multiple statuses.
+- Use `@digitalbazaar/vc-status-list-context`. This is not a breaking
+  change -- the context is the same just a package relocation.
 
 ## 2.0.0 - 2022-02-19
 

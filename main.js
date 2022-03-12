@@ -1,10 +1,10 @@
 /*!
  * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
  */
-import {StatusList} from './StatusList.js';
-import vc from '@digitalbazaar/vc';
-import statusListCtx from 'vc-status-list-context';
 import credentialsCtx from 'credentials-context';
+import {StatusList} from './StatusList.js';
+import statusListCtx from '@digitalbazaar/vc-status-list-context';
+import vc from '@digitalbazaar/vc';
 
 const VC_V1_CONTEXT_URL = credentialsCtx.constants.CREDENTIALS_CONTEXT_V1_URL;
 const SL_V1_CONTEXT_URL = statusListCtx.constants.CONTEXT_URL_V1;

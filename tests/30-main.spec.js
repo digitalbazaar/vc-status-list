@@ -6,9 +6,9 @@ import {
   assertStatusList2021Context, getCredentialStatus
 } from '..';
 import {extendContextLoader} from 'jsonld-signatures';
-import statusListCtx from 'vc-status-list-context';
-import vc from '@digitalbazaar/vc';
 import {slCredential as SLC} from './mock-sl-credential.js';
+import statusListCtx from '@digitalbazaar/vc-status-list-context';
+import vc from '@digitalbazaar/vc';
 
 const {defaultDocumentLoader} = vc;
 

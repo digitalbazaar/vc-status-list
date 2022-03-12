@@ -1,7 +1,7 @@
 /*!
  * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
  */
-import statusListCtx from 'vc-status-list-context';
+import statusListCtx from '@digitalbazaar/vc-status-list-context';
 
 const encodedList100KWith50KthRevoked =
   'H4sIAAAAAAAAA-3OMQ0AAAgDsOHfNB72EJJWQRMAAAAAAIDWXAcAAAAAAIDHFrc4zDz' +
