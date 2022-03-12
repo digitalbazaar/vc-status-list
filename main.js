@@ -110,26 +110,28 @@ export function assertStatusList2021Context({credential} = {}) {
 }
 
 /**
- * Gets the `credentialStatus` of a specific type (`statusType`) of a
- *   credential.
+ * Gets the `credentialStatus` of a credential based on its status purpose
+ * (`statusPurpose`).
  *
  * @param {object} options - Options to use.
  * @param {object} options.credential - A VC.
- * @param {'revoked'|'suspended'} options.statusType - A statusType.
+ * @param {'revocation'|'suspension'} options.statusPurpose - A
+ *   `statusPurpose`.
  *
- * @throws If the credentialStatus is invalid or missing.
+ * @throws If the `credentialStatus` is invalid or missing.
  *
- * @returns {object} The resulting status of the given type.
+ * @returns {object} The resulting `credentialStatus`.
  */
-export function getCredentialStatus({credential, statusType} = {}) {
+export function getCredentialStatus({credential, statusPurpose} = {}) {
   _isObject({credential});
   assertStatusList2021Context({credential});
-  // statusType can be `revoked` or `suspended`
-  const statusTypes = {
-    revoked: 'RevocationList2021Status',
-    suspended: 'SuspensionList2021Status'
+  // older revisions of `StatusList2021` used different types to express
+  // the status purpose:
+  const statusPurposes = {
+    revocation: 'RevocationList2021Status',
+    suspension: 'SuspensionList2021Status'
   };
-  const expectedType = statusTypes[statusType] || statusType;
+  const expectedType = statusPurposes[statusPurpose];
   // get and validate status
   if(!(credential.credentialStatus &&
     typeof credential.credentialStatus === 'object')) {
@@ -138,9 +140,11 @@ export function getCredentialStatus({credential, statusType} = {}) {
   const credentialStatuses = _getStatuses({credential});
   const result = credentialStatuses.filter(
     credentialStatus => _validateStatus({credentialStatus})).find(
-    cs => cs.type === expectedType);
+    // check for matching `type` (legacy) or `statusPurpose`
+    cs => cs.type === expectedType || cs.statusPurpose === statusPurpose);
   if(!result) {
-    throw new Error(`credentialStatus type "${statusType}" not found.`);
+    throw new Error(
+      `credentialStatus with status purpose "${statusPurpose}" not found.`);
   }
   return result;
 }
