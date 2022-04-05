@@ -73,7 +73,7 @@ describe('main', () => {
       type: ['VerifiableCredential', 'StatusList2021Credential'],
       credentialSubject: {
         id: `${id}#list`,
-        type: 'RevocationList2021',
+        type: 'StatusList2021',
         encodedList: encodedList100k
       }
     });
@@ -93,7 +93,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '67342',
         statusListCredential: SLC.id
       },
@@ -141,7 +141,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '67342',
         statusListCredential: SLC.id
       },
@@ -210,7 +210,7 @@ describe('main', () => {
     result.verified.should.equal(false);
     should.exist(result.error);
     result.error.message.should.equal('"credentialStatus.type" must be ' +
-      '"RevocationList2021Status" or "SuspensionList2021Status".');
+      '"StatusList2021Entry".');
   });
 
   it('should fail to verify VC with one incorrect status type', async () => {
@@ -261,7 +261,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListCredential: SLC.id
       },
       issuer: SLC.issuer,
@@ -289,7 +289,7 @@ describe('main', () => {
         },
         credentialStatus: {
           id: 'https://example.com/status/1#67342',
-          type: 'RevocationList2021Status',
+          type: 'StatusList2021Entry',
           statusListIndex: '67342'
         },
         issuer: SLC.issuer,
@@ -317,7 +317,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '50000',
         statusListCredential: SLC.id
       },
@@ -344,7 +344,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '50000',
         // intentionally set statusListCredential to an id that is not set
         // in documents
@@ -384,7 +384,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
@@ -400,7 +400,7 @@ describe('main', () => {
   });
 
   it('should fail to verify status if "credentialSubject" type is not ' +
-    '"RevocationList2021"', async () => {
+    '"StatusList2021"', async () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
     // intentionally set credential subject type to an invalid type
     invalidSLC.credentialSubject.type = 'InvalidType';
@@ -421,7 +421,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
@@ -433,7 +433,7 @@ describe('main', () => {
     result.verified.should.equal(false);
     should.exist(result.error);
     result.error.message.should.equal('Revocation list type must be ' +
-      '"RevocationList2021".');
+      '"StatusList2021".');
   });
 
   it('should fail to verify status if "credentialSubject.encodedList" ' +
@@ -458,7 +458,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
@@ -669,7 +669,7 @@ describe('main', () => {
       delete credential['@context'][1];
       credential.credentialStatus = {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '50000',
         statusListCredential: SLC.id
       };
@@ -734,7 +734,7 @@ describe('main', () => {
         },
         credentialStatus: {
           id: 'https://example.com/status/1#67342',
-          type: 'RevocationList2021Status',
+          type: 'StatusList2021Entry',
           statusListCredential: SLC.id
         }
       };
@@ -775,7 +775,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '50000',
         statusListCredential: SLC.id
       }
@@ -830,7 +830,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: 50000,
         statusListCredential: SLC.id
       }
@@ -871,7 +871,7 @@ describe('main', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'RevocationList2021Status',
+        type: 'StatusList2021Entry',
         statusListIndex: '67342',
         statusListCredential: SLC.id,
       },
@@ -905,7 +905,7 @@ describe('main', () => {
         },
         credentialStatus: {
           id: 'https://example.com/status/1#67342',
-          type: 'RevocationList2021Status',
+          type: 'StatusList2021Entry',
           statusListIndex: '67342',
           statusListCredential: SLC.id,
         },

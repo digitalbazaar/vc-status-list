@@ -3,8 +3,8 @@
  */
 import credentialsCtx from 'credentials-context';
 import {StatusList} from './StatusList.js';
-import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import vc from '@digitalbazaar/vc';
+import statusListCtx from '@digitalbazaar/vc-status-list-context';
 
 const VC_V1_CONTEXT_URL = credentialsCtx.constants.CREDENTIALS_CONTEXT_V1_URL;
 const SL_V1_CONTEXT_URL = statusListCtx.constants.CONTEXT_URL_V1;
@@ -25,7 +25,7 @@ export async function createCredential({id, list}) {
     type: ['VerifiableCredential', 'StatusList2021Credential'],
     credentialSubject: {
       id: `${id}#list`,
-      type: 'RevocationList2021',
+      type: 'StatusList2021',
       encodedList
     }
   };
@@ -84,8 +84,7 @@ export function statusTypeMatches({credential} = {}) {
   // at least one "credentialStatus.type" must match
   // RevocationList2021Status or SuspensionList2021Status
   return credentialStatuses.every(credentialStatus => {
-    if(!(credentialStatus.type === 'RevocationList2021Status' ||
-      credentialStatus.type === 'SuspensionList2021Status')) {
+    if(credentialStatus.type !== 'StatusList2021Entry') {
       // status type does not match
       return false;
     }
@@ -222,8 +221,8 @@ async function _checkStatus({
   // get JSON RevocationList
   const {credentialSubject: rl} = slCredential;
 
-  if(rl.type !== 'RevocationList2021') {
-    throw new Error('Revocation list type must be "RevocationList2021".');
+  if(rl.type !== 'StatusList2021') {
+    throw new Error('Revocation list type must be "StatusList2021".');
   }
 
   // decode list from RL VC
@@ -354,4 +353,3 @@ function isArrayOfObjects(x) {
   return Array.isArray(x) && x.length > 0 &&
     x.every(x => x && typeof x === 'object');
 }
-
