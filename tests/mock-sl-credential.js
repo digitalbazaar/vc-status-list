@@ -19,7 +19,7 @@ export const slCredential = {
   type: ['VerifiableCredential', 'StatusList2021Credential'],
   credentialSubject: {
     id: `https://example.com/status/1#list`,
-    type: 'RevocationList2021',
+    type: 'StatusList2021',
     encodedList: encodedList100KWith50KthRevoked
   }
 };

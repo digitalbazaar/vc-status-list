@@ -32,7 +32,7 @@ const slCredential = {
   type: ["VerifiableCredential", "StatusList2021Credential"],
   credentialSubject: {
     id: `${id}#list`,
-    type: "RevocationList2021",
+    type: "StatusList2021",
     encodedList,
   },
 };
@@ -43,7 +43,7 @@ let verifiableCredential = await vc.issue({
 });
 ```
 
-### Created a Credential which uses a RevocationList2021
+### Created a Credential which uses a StatusList2021
 
 ```js
 // see imports above
@@ -59,7 +59,7 @@ const credential = {
   issuanceDate: "2021-03-10T04:24:12.164Z",
   credentialStatus: {
     id: "https://example.com/credentials/status/3#94567",
-    type: "RevocationList2021Status",
+    type: "StatusList2021Entry",
     statusListIndex: "94567",
     statusListCredential:
       "https://did.actor/alice/credentials/status/3",
