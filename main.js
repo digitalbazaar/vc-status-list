@@ -131,9 +131,8 @@ export function getCredentialStatus({credential, statusPurpose} = {}) {
   const credentialStatuses = _getStatuses({credential});
   const result = credentialStatuses.filter(
     credentialStatus => _validateStatus({credentialStatus})).find(
-    // check for matching `type` or `statusPurpose`
-    cs => cs.type === 'StatusList2021Entry' ||
-      cs.statusPurpose === statusPurpose);
+    // check for matching `statusPurpose`
+    cs => cs.statusPurpose === statusPurpose);
   if(!result) {
     throw new Error(
       `credentialStatus with status purpose "${statusPurpose}" not found.`);
