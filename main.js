@@ -81,8 +81,8 @@ export function statusTypeMatches({credential} = {}) {
     return false;
   }
   const credentialStatuses = _getStatuses({credential});
-  // at least one "credentialStatus.type" must match
-  // RevocationList2021Status or SuspensionList2021Status
+  // at least o"credentialStatus.type" must match
+  // StatusList2021Entry
   return credentialStatuses.every(credentialStatus => {
     if(credentialStatus.type !== 'StatusList2021Entry') {
       // status type does not match
@@ -124,13 +124,6 @@ export function assertStatusList2021Context({credential} = {}) {
 export function getCredentialStatus({credential, statusPurpose} = {}) {
   _isObject({credential});
   assertStatusList2021Context({credential});
-  // older revisions of `StatusList2021` used different types to express
-  // the status purpose:
-  const statusPurposes = {
-    revocation: 'RevocationList2021Status',
-    suspension: 'SuspensionList2021Status'
-  };
-  const expectedType = statusPurposes[statusPurpose];
   // get and validate status
   if(!(credential.credentialStatus &&
     typeof credential.credentialStatus === 'object')) {
@@ -139,8 +132,9 @@ export function getCredentialStatus({credential, statusPurpose} = {}) {
   const credentialStatuses = _getStatuses({credential});
   const result = credentialStatuses.filter(
     credentialStatus => _validateStatus({credentialStatus})).find(
-    // check for matching `type` (legacy) or `statusPurpose`
-    cs => cs.type === expectedType || cs.statusPurpose === statusPurpose);
+    // check for matching `type` or `statusPurpose`
+    cs => cs.type === 'StatusList2021Entry' ||
+      cs.statusPurpose === statusPurpose);
   if(!result) {
     throw new Error(
       `credentialStatus with status purpose "${statusPurpose}" not found.`);
@@ -292,11 +286,9 @@ async function _checkStatuses({
  * @returns {object} A credentialStatus.
  */
 function _validateStatus({credentialStatus}) {
-  if(!(credentialStatus.type === 'RevocationList2021Status' ||
-    credentialStatus.type === 'SuspensionList2021Status')) {
+  if(credentialStatus.type !== 'StatusList2021Entry') {
     throw new Error(
-      '"credentialStatus.type" must be "RevocationList2021Status" or ' +
-        '"SuspensionList2021Status".');
+      '"credentialStatus.type" must be "StatusList2021Entry".');
   }
   if(typeof credentialStatus.id !== 'string') {
     throw new TypeError(
