@@ -22,7 +22,7 @@
     "@digitalbazaar/bitstring": "^1.1.0",
     "@digitalbazaar/vc": "^2.1.0",
     "credentials-context": "^2.0.0",
-    "@digitalbazaar/vc-status-list-context": "digitalbazaar/vc-status-list-context#update-context",
+    "@digitalbazaar/vc-status-list-context": "^3.0.0",
     "esm": "^3.2.25"
   },
   "devDependencies": {
