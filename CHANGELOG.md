@@ -1,5 +1,12 @@
 # vc-status-list ChangeLog
 
+## 3.0.0 - 2022-04-TBD
+
+### Changed
+- **BREAKING**: Use `@digitalbazaar/vc-status-list-context` v3.0. Rename
+  `RevocationList2021` and `RevocationList2021Status` to `StatusList2021` and
+  `StatusList2021Entry` respectively and remove `SuspensionList2021Status`.
+
 ## 2.1.0 - 2022-03-12
 
 ### Added
