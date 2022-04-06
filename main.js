@@ -81,8 +81,7 @@ export function statusTypeMatches({credential} = {}) {
     return false;
   }
   const credentialStatuses = _getStatuses({credential});
-  // at least o"credentialStatus.type" must match
-  // StatusList2021Entry
+  // "credentialStatus.type" must match StatusList2021Entry
   return credentialStatuses.every(credentialStatus => {
     if(credentialStatus.type !== 'StatusList2021Entry') {
       // status type does not match
