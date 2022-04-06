@@ -135,7 +135,7 @@ export function getCredentialStatus({credential, statusPurpose} = {}) {
     cs => cs.statusPurpose === statusPurpose);
   if(!result) {
     throw new Error(
-      `credentialStatus with status purpose "${statusPurpose}" not found.`);
+      `"credentialStatus" with status purpose "${statusPurpose}" not found.`);
   }
   return result;
 }
