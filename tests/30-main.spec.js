@@ -704,7 +704,7 @@ describe('main', () => {
     let result;
     try {
       delete credential.credentialStatus;
-      result = getCredentialStatus({credential});
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
     } catch(e) {
       err = e;
     }
@@ -729,7 +729,7 @@ describe('main', () => {
     let err;
     let result;
     try {
-      result = getCredentialStatus({credential});
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
     } catch(e) {
       err = e;
     }
@@ -763,6 +763,31 @@ describe('main', () => {
     should.not.exist(err);
     should.exist(result);
     result.should.eql(credential.credentialStatus);
+  });
+
+  it('should fail when "statusPurpose" is not specified for ' +
+  '"getCredentialStatus"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'StatusList2021Entry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.equal('"statusPurpose" string is required.');
   });
 
   it('should fail when "statusPurpose" does not match ' +

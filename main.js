@@ -123,6 +123,9 @@ export function assertStatusList2021Context({credential} = {}) {
 export function getCredentialStatus({credential, statusPurpose} = {}) {
   _isObject({credential});
   assertStatusList2021Context({credential});
+  if(!(statusPurpose && typeof statusPurpose === 'string')) {
+    throw new Error('"statusPurpose" string is required.');
+  }
   // get and validate status
   if(!(credential.credentialStatus &&
     typeof credential.credentialStatus === 'object')) {
@@ -287,6 +290,11 @@ function _validateStatus({credentialStatus}) {
   if(credentialStatus.type !== 'StatusList2021Entry') {
     throw new Error(
       '"credentialStatus.type" must be "StatusList2021Entry".');
+  }
+  if(credentialStatus.statusPurpose &&
+    typeof credentialStatus.statusPurpose !== 'string') {
+    throw new TypeError(
+      '"credentialStatus.statusPurpose" must be a string.');
   }
   if(typeof credentialStatus.id !== 'string') {
     throw new TypeError(
