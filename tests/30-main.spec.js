@@ -427,7 +427,7 @@ describe('main', () => {
     });
     result.verified.should.equal(false);
     should.exist(result.error);
-    result.error.message.should.equal('Revocation list type must be ' +
+    result.error.message.should.equal('Status list type must be ' +
       '"StatusList2021".');
   });
 
@@ -464,7 +464,7 @@ describe('main', () => {
     });
     result.verified.should.equal(false);
     should.exist(result.error);
-    result.error.message.should.equal('Could not decode encoded revocation ' +
+    result.error.message.should.equal('Could not decode encoded status ' +
       'list; reason: undefined');
   });
 

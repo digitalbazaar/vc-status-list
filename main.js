@@ -210,26 +210,26 @@ async function _checkStatus({
       'Status list credential type must include "StatusList2021Credential".');
   }
 
-  // get JSON RevocationList
-  const {credentialSubject: rl} = slCredential;
+  // get JSON StatusList
+  const {credentialSubject: sl} = slCredential;
 
-  if(rl.type !== 'StatusList2021') {
-    throw new Error('Revocation list type must be "StatusList2021".');
+  if(sl.type !== 'StatusList2021') {
+    throw new Error('Status list type must be "StatusList2021".');
   }
 
-  // decode list from RL VC
-  const {encodedList} = rl;
+  // decode list from SL VC
+  const {encodedList} = sl;
   let list;
   try {
     list = await decodeList({encodedList});
   } catch(e) {
     const err = new Error(
-      `Could not decode encoded revocation list; reason: ${e.message}`);
+      `Could not decode encoded status list; reason: ${e.message}`);
     err.cause = e;
     throw err;
   }
 
-  // check VC's SL index for revocation status
+  // check VC's SL index for the status
   const verified = !list.getStatus(index);
 
   // TODO: return anything else? returning `slCredential` may be too unwieldy
