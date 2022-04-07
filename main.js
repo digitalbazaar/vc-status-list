@@ -81,14 +81,10 @@ export function statusTypeMatches({credential} = {}) {
     return false;
   }
   const credentialStatuses = _getStatuses({credential});
-  // "credentialStatus.type" must match StatusList2021Entry
-  return credentialStatuses.every(credentialStatus => {
-    if(credentialStatus.type !== 'StatusList2021Entry') {
-      // status type does not match
-      return false;
-    }
-    return true;
-  });
+  if(!credentialStatuses) {
+    return false;
+  }
+  return true;
 }
 
 export function assertStatusList2021Context({credential} = {}) {
@@ -132,6 +128,9 @@ export function getCredentialStatus({credential, statusPurpose} = {}) {
     throw new Error('"credentialStatus" is missing or invalid.');
   }
   const credentialStatuses = _getStatuses({credential});
+  if(!credentialStatuses) {
+    throw new Error('"credentialStatus.type" must be "StatusList2021Entry".');
+  }
   const result = credentialStatuses.filter(
     credentialStatus => _validateStatus({credentialStatus})).find(
     // check for matching `statusPurpose`
@@ -257,6 +256,9 @@ async function _checkStatuses({
     throw new TypeError('"suite" must be an object or an array of objects.');
   }
   const credentialStatuses = _getStatuses({credential});
+  if(!credentialStatuses) {
+    throw new Error('"credentialStatus.type" must be "StatusList2021Entry".');
+  }
   credentialStatuses.forEach(
     credentialStatus => _validateStatus({credentialStatus}));
   const results = await Promise.all(credentialStatuses.map(
@@ -291,8 +293,7 @@ function _validateStatus({credentialStatus}) {
     throw new Error(
       '"credentialStatus.type" must be "StatusList2021Entry".');
   }
-  if(credentialStatus.statusPurpose &&
-    typeof credentialStatus.statusPurpose !== 'string') {
+  if(typeof credentialStatus.statusPurpose !== 'string') {
     throw new TypeError(
       '"credentialStatus.statusPurpose" must be a string.');
   }
@@ -337,14 +338,18 @@ function _isObject({credential}) {
  * @param {object} options - Options to use.
  * @param {object} options.credential - A VC with a credentialStatus.
  *
- * @returns {Array<object>} An array of statuses.
+ * @returns {Array<object>} An array of statuses with type
+ *   "StatusList2021Entry".
  */
 function _getStatuses({credential}) {
   const {credentialStatus} = credential;
-  if(Array.isArray(credentialStatus)) {
-    return credentialStatus;
+  if(Array.isArray(credentialStatus) && credentialStatus.length > 0) {
+    return credentialStatus.filter(cs => cs.type === 'StatusList2021Entry');
   }
-  return [credentialStatus];
+  if(credentialStatus && credentialStatus.type === 'StatusList2021Entry') {
+    return [credentialStatus];
+  }
+  return null;
 }
 
 function isArrayOfObjects(x) {
