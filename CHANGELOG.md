@@ -6,6 +6,8 @@
 - **BREAKING**: Use `@digitalbazaar/vc-status-list-context` v3.0. Rename
   `RevocationList2021` and `RevocationList2021Status` to `StatusList2021` and
   `StatusList2021Entry` respectively and remove `SuspensionList2021Status`.
+- `_getStatuses` now only returns array of statuses with type
+  "StatusList2021Entry".
 
 ## 2.1.0 - 2022-03-12
 

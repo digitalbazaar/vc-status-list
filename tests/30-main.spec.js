@@ -142,6 +142,7 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: '67342',
         statusListCredential: SLC.id
       },
@@ -168,6 +169,7 @@ describe('main', () => {
       credentialStatus: [{
         id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: '67342',
         statusListCredential: SLC.id
       }],
@@ -208,7 +210,8 @@ describe('main', () => {
       '"StatusList2021Entry".');
   });
 
-  it('should fail to verify VC with one incorrect status type', async () => {
+  it('should not fail to verify VC if it has atleast one credential status ' +
+  'with correct type', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -223,11 +226,13 @@ describe('main', () => {
       credentialStatus: [{
         id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: '67342',
         statusListCredential: SLC.id
       }, {
         id: 'https://example.com/status/1#67342',
         type: 'ex:NonmatchingStatusType',
+        statusPurpose: 'revocation',
         statusListIndex: '67342',
         statusListCredential: SLC.id
       }],
@@ -236,10 +241,8 @@ describe('main', () => {
     const result = await checkStatus({
       credential, documentLoader, verifyStatusListCredential: false
     });
-    result.verified.should.equal(false);
-    should.exist(result.error);
-    result.error.message.should.equal('"credentialStatus.type" must be ' +
-      '"StatusList2021Entry".');
+    result.verified.should.equal(true);
+    should.not.exist(result.error);
   });
 
   it('should fail to verify status with missing index', async () => {
@@ -257,6 +260,7 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListCredential: SLC.id
       },
       issuer: SLC.issuer,
@@ -285,6 +289,7 @@ describe('main', () => {
         credentialStatus: {
           id: 'https://example.com/status/1#67342',
           type: 'StatusList2021Entry',
+          statusPurpose: 'suspension',
           statusListIndex: '67342'
         },
         issuer: SLC.issuer,
@@ -340,6 +345,7 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: '50000',
         // intentionally set statusListCredential to an id that is not set
         // in documents
@@ -380,6 +386,7 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
@@ -417,6 +424,7 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
@@ -454,6 +462,7 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
@@ -740,6 +749,37 @@ describe('main', () => {
       '"StatusList2021Entry"');
   });
 
+  it('should not fail if credential has atleast one credential status ' +
+  'with correct type for "getCredentialStatus"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = [{
+      id: 'https://example.com/status/1#67342',
+      type: 'ex:NonmatchingStatusType',
+      statusPurpose: 'suspension',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    },
+    {
+      id: 'https://example.com/status/1#67342',
+      type: 'StatusList2021Entry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    }];
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.exist(result);
+    result.should.eql(credential.credentialStatus[1]);
+  });
+
   it('should return "credentialStatus" when "credentialStatus.type" is ' +
   '"StatusList2021Entry" and "statusPurpose" matches for "getCredentialStatus"',
   async () => {
@@ -928,6 +968,7 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#50000',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: 50000,
         statusListCredential: SLC.id
       }
@@ -969,6 +1010,7 @@ describe('main', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
         statusListIndex: '67342',
         statusListCredential: SLC.id,
       },
@@ -1003,6 +1045,7 @@ describe('main', () => {
         credentialStatus: {
           id: 'https://example.com/status/1#67342',
           type: 'StatusList2021Entry',
+          statusPurpose: 'revocation',
           statusListIndex: '67342',
           statusListCredential: SLC.id,
         },
