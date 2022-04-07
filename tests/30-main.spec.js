@@ -714,6 +714,83 @@ describe('main', () => {
     err.message.should.contain('"credentialStatus" is missing or invalid');
   });
 
+  it('should fail when "credentialStatus.type" is not ' +
+  '"StatusList2021Entry" for "getCredentialStatus"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'InvalidType',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('"credentialStatus.type" must be ' +
+      '"StatusList2021Entry"');
+  });
+
+  it('should return "credentialStatus" when "credentialStatus.type" is ' +
+  '"StatusList2021Entry" and "statusPurpose" matches for "getCredentialStatus"',
+  async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'StatusList2021Entry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.exist(result);
+    result.should.eql(credential.credentialStatus);
+  });
+
+  it('should fail when "statusPurpose" does not match ' +
+  '"credentialStatus.statusPurpose" for "getCredentialStatus"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'StatusList2021Entry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'suspension'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('"credentialStatus" with status purpose ' +
+      '"suspension" not found.');
+  });
+
   it('should fail to verify when documentLoader is not a function',
     async () => {
       const credential = {
