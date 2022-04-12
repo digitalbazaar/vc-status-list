@@ -780,6 +780,57 @@ describe('main', () => {
     result.should.eql(credential.credentialStatus[1]);
   });
 
+  it('should fail if "credential.credentialStatus" is an empty array ' +
+  'for "getCredentialStatus"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = [ ];
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.message.should.equal('"credentialStatus.type" must be ' +
+      '"StatusList2021Entry".');
+  });
+
+  it('should fail if "credential.credentialStatus" has no status with ' +
+  'type matching "StatusList2021Entry" for "getCredentialStatus"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = [{
+      id: 'https://example.com/status/1#12345',
+      type: 'ex:NonmatchingStatusType',
+      statusPurpose: 'revocation',
+      statusListIndex: '12345',
+      statusListCredential: SLC.id
+    },
+    {
+      id: 'https://example.com/status/1#67342',
+      type: 'ex:NonmatchingStatusType',
+      statusPurpose: 'suspension',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    }];
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.message.should.equal('"credentialStatus.type" must be ' +
+      '"StatusList2021Entry".');
+  });
+
   it('should return "credentialStatus" when "credentialStatus.type" is ' +
   '"StatusList2021Entry" and "statusPurpose" matches for "getCredentialStatus"',
   async () => {

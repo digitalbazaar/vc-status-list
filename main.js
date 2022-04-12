@@ -338,13 +338,18 @@ function _isObject({credential}) {
  * @param {object} options - Options to use.
  * @param {object} options.credential - A VC with a credentialStatus.
  *
- * @returns {Array<object>} An array of statuses with type
- *   "StatusList2021Entry".
+ * @returns {Array<object>|null} An array of statuses with type
+ *   "StatusList2021Entry" or null if there are no matching types.
  */
 function _getStatuses({credential}) {
   const {credentialStatus} = credential;
   if(Array.isArray(credentialStatus) && credentialStatus.length > 0) {
-    return credentialStatus.filter(cs => cs.type === 'StatusList2021Entry');
+    const statuses = credentialStatus.filter(
+      cs => cs.type === 'StatusList2021Entry');
+    if(statuses.length !== 0) {
+      return statuses;
+    }
+    return null;
   }
   if(credentialStatus && credentialStatus.type === 'StatusList2021Entry') {
     return [credentialStatus];
