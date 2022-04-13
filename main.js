@@ -81,7 +81,7 @@ export function statusTypeMatches({credential} = {}) {
     return false;
   }
   const credentialStatuses = _getStatuses({credential});
-  if(!credentialStatuses) {
+  if(credentialStatuses.length === 0) {
     return false;
   }
   return true;
@@ -128,7 +128,7 @@ export function getCredentialStatus({credential, statusPurpose} = {}) {
     throw new Error('"credentialStatus" is missing or invalid.');
   }
   const credentialStatuses = _getStatuses({credential});
-  if(!credentialStatuses) {
+  if(credentialStatuses.length === 0) {
     throw new Error('"credentialStatus.type" must be "StatusList2021Entry".');
   }
   const result = credentialStatuses.filter(
@@ -256,7 +256,7 @@ async function _checkStatuses({
     throw new TypeError('"suite" must be an object or an array of objects.');
   }
   const credentialStatuses = _getStatuses({credential});
-  if(!credentialStatuses) {
+  if(credentialStatuses.length === 0) {
     throw new Error('"credentialStatus.type" must be "StatusList2021Entry".');
   }
   credentialStatuses.forEach(
@@ -338,23 +338,18 @@ function _isObject({credential}) {
  * @param {object} options - Options to use.
  * @param {object} options.credential - A VC with a credentialStatus.
  *
- * @returns {Array<object>|null} An array of statuses with type
- *   "StatusList2021Entry" or null if there are no matching types.
+ * @returns {Array<object>} An array of statuses with type
+ *   "StatusList2021Entry" or an empty array if there are no matching types.
  */
 function _getStatuses({credential}) {
   const {credentialStatus} = credential;
   if(Array.isArray(credentialStatus) && credentialStatus.length > 0) {
-    const statuses = credentialStatus.filter(
-      cs => cs.type === 'StatusList2021Entry');
-    if(statuses.length !== 0) {
-      return statuses;
-    }
-    return null;
+    return credentialStatus.filter(cs => cs.type === 'StatusList2021Entry');
   }
   if(credentialStatus && credentialStatus.type === 'StatusList2021Entry') {
     return [credentialStatus];
   }
-  return null;
+  return [];
 }
 
 function isArrayOfObjects(x) {
