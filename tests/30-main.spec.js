@@ -745,8 +745,8 @@ describe('main', () => {
     should.exist(err);
     should.not.exist(result);
     err.should.be.instanceof(Error);
-    err.message.should.contain('"credentialStatus.type" must be ' +
-      '"StatusList2021Entry"');
+    err.message.should.contain('"credentialStatus" with type ' +
+      '"StatusList2021Entry" and status purpose "revocation" not found.');
   });
 
   it('should not fail if credential has atleast one credential status ' +
@@ -795,8 +795,8 @@ describe('main', () => {
     }
     should.exist(err);
     should.not.exist(result);
-    err.message.should.equal('"credentialStatus.type" must be ' +
-      '"StatusList2021Entry".');
+    err.message.should.equal('"credentialStatus" with type ' +
+      '"StatusList2021Entry" and status purpose "revocation" not found.');
   });
 
   it('should fail if "credential.credentialStatus" has no status with ' +
@@ -827,8 +827,8 @@ describe('main', () => {
     }
     should.exist(err);
     should.not.exist(result);
-    err.message.should.equal('"credentialStatus.type" must be ' +
-      '"StatusList2021Entry".');
+    err.message.should.equal('"credentialStatus" with type ' +
+      '"StatusList2021Entry" and status purpose "revocation" not found.');
   });
 
   it('should return "credentialStatus" when "credentialStatus.type" is ' +
@@ -877,8 +877,8 @@ describe('main', () => {
     }
     should.exist(err);
     should.not.exist(result);
-    err.should.be.instanceof(Error);
-    err.message.should.equal('"statusPurpose" string is required.');
+    err.name.should.equal('TypeError');
+    err.message.should.equal('"statusPurpose" must be a string.');
   });
 
   it('should fail when "statusPurpose" does not match ' +
@@ -903,8 +903,8 @@ describe('main', () => {
     should.exist(err);
     should.not.exist(result);
     err.should.be.instanceof(Error);
-    err.message.should.contain('"credentialStatus" with status purpose ' +
-      '"suspension" not found.');
+    err.message.should.contain('"credentialStatus" with type ' +
+      '"StatusList2021Entry" and status purpose "suspension" not found.');
   });
 
   it('should fail to verify when documentLoader is not a function',

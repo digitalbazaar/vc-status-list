@@ -81,10 +81,7 @@ export function statusTypeMatches({credential} = {}) {
     return false;
   }
   const credentialStatuses = _getStatuses({credential});
-  if(credentialStatuses.length === 0) {
-    return false;
-  }
-  return true;
+  return credentialStatuses.length > 0;
 }
 
 export function assertStatusList2021Context({credential} = {}) {
@@ -120,7 +117,7 @@ export function getCredentialStatus({credential, statusPurpose} = {}) {
   _isObject({credential});
   assertStatusList2021Context({credential});
   if(!(statusPurpose && typeof statusPurpose === 'string')) {
-    throw new Error('"statusPurpose" string is required.');
+    throw new TypeError('"statusPurpose" must be a string.');
   }
   // get and validate status
   if(!(credential.credentialStatus &&
@@ -129,15 +126,16 @@ export function getCredentialStatus({credential, statusPurpose} = {}) {
   }
   const credentialStatuses = _getStatuses({credential});
   if(credentialStatuses.length === 0) {
-    throw new Error('"credentialStatus.type" must be "StatusList2021Entry".');
+    throw new Error('"credentialStatus" with type "StatusList2021Entry" ' +
+    `and status purpose "${statusPurpose}" not found.`);
   }
   const result = credentialStatuses.filter(
     credentialStatus => _validateStatus({credentialStatus})).find(
     // check for matching `statusPurpose`
     cs => cs.statusPurpose === statusPurpose);
   if(!result) {
-    throw new Error(
-      `"credentialStatus" with status purpose "${statusPurpose}" not found.`);
+    throw new Error('"credentialStatus" with type "StatusList2021Entry" ' +
+    `and status purpose "${statusPurpose}" not found.`);
   }
   return result;
 }
@@ -343,7 +341,7 @@ function _isObject({credential}) {
  */
 function _getStatuses({credential}) {
   const {credentialStatus} = credential;
-  if(Array.isArray(credentialStatus) && credentialStatus.length > 0) {
+  if(Array.isArray(credentialStatus)) {
     return credentialStatus.filter(cs => cs.type === 'StatusList2021Entry');
   }
   if(credentialStatus && credentialStatus.type === 'StatusList2021Entry') {
