@@ -17,21 +17,21 @@ export const slCredential = {
     SUITE_CONTEXT_URL
   ],
   id: 'https://example.com/status/1',
-  issuer: 'did:key:z6MknUVLM84Eo5mQswCqP7f6oNER84rmVKkCvypob8UtBC8K',
+  issuer: 'did:key:z6MkhgCF7fgo4isGpbwRRPRh8kNyQ6VtvmqYcVMqPuzS2pWY',
   issuanceDate: '2021-03-10T04:24:12.164Z',
   type: [ 'VerifiableCredential', 'StatusList2021Credential' ],
   credentialSubject: {
     id: 'https://example.com/status/1#list',
     type: 'StatusList2021',
-    encodedList: encodedList100KWith50KthRevoked,
-    proof: {
-      type: 'Ed25519Signature2020',
-      created: '2022-04-14T18:59:44Z',
-      // eslint-disable-next-line max-len
-      verificationMethod: 'did:key:z6MknUVLM84Eo5mQswCqP7f6oNER84rmVKkCvypob8UtBC8K#z6MknCCLeeHBUaHu4aHSVLDCYQW9gjVJ7a63FpMvtuVMy53T',
-      proofPurpose: 'assertionMethod',
-      // eslint-disable-next-line max-len
-      proofValue: 'z4EZMjmQNbJQJm5rWKyiLm486WrDJuQAdCHo2aAm9yQ3EkMjuFVCVY9Mab7dQhDtQRt4fJ7siytQZtcoUiQLCBEXB'
-    }
+    encodedList: encodedList100KWith50KthRevoked
+  },
+  proof: {
+    type: 'Ed25519Signature2020',
+    created: '2022-04-14T20:20:54Z',
+    verificationMethod: 'did:key:z6MkhgCF7fgo4isGpbwRRPRh8kNyQ6VtvmqYcVMqPuz' +
+      'S2pWY#z6MkhgCF7fgo4isGpbwRRPRh8kNyQ6VtvmqYcVMqPuzS2pWY',
+    proofPurpose: 'assertionMethod',
+    proofValue: 'zsoPiKg5wabrkKMJqv8k5d2gEbVs7pfQK2591zcfntrkGmDAqSUSiK4xrmz' +
+      'NmQNTNL8tc6kaY77fodY5Gtu2QAVC'
   }
 };

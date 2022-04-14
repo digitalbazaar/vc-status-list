@@ -9,8 +9,6 @@ import {extendContextLoader} from 'jsonld-signatures';
 import {slCredential as SLC} from './mock-sl-credential.js';
 import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import vc from '@digitalbazaar/vc';
-// import {Ed25519VerificationKey2020} from
-//   '@digitalbazaar/ed25519-verification-key-2020';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import suiteCtx2020 from 'ed25519-signature-2020-context';
 
@@ -285,21 +283,7 @@ describe('checkStatus', () => {
       },
       issuer: SLC.issuer,
     };
-    // const mockKeyPair2020 = {
-    //   type: 'Ed25519VerificationKey2020',
-    //   controller: SLC.issuer,
-    //   id: SLC.issuer + '#z6MknCCLeeHBUaHu4aHSVLDCYQW9gjVJ7a63FpMvtuVMy53T',
-    //   publicKeyMultibase: 'z6MknCCLeeHBUaHu4aHSVLDCYQW9gjVJ7a63FpMvtuVMy53T',
-    // eslint-disable-next-line max-len
-    //   privateKeyMultibase: 'zrv2EET2WWZ8T1Jbg4fEH5cQxhbUS22XxdweypUbjWVzv1Y' +
-    //     'D6VqYuW6LH7heQCNYQCuoKaDwvv2qCWz3uBzG2xesqmf'
-    // };
-    // const keyPair = await Ed25519VerificationKey2020.from({
-    //   ...mockKeyPair2020
-    // });
     const suite = new Ed25519Signature2020();
-    // eslint-disable-next-line max-len
-    // const signedSlc = await vc.issue({credential: SLC, suite, documentLoader});
     const result = await checkStatus({
       credential,
       suite,
