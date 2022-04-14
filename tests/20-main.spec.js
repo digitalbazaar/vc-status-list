@@ -35,15 +35,15 @@ const documentLoader = extendContextLoader(async url => {
   return defaultDocumentLoader(url);
 });
 
-describe('main', () => {
-  it('should create a list', async () => {
+describe('createList', () => {
+  it('should pass', async () => {
     const list = await createList({length: 8});
     should.exist(list.bitstring);
     should.exist(list.length);
     list.length.should.equal(8);
   });
 
-  it('should fail to create a list if no length is provided', async () => {
+  it('should fail when "length" param is missing', async () => {
     let err;
     try {
       await createList();
@@ -53,12 +53,27 @@ describe('main', () => {
     should.exist(err);
     err.name.should.equal('TypeError');
   });
+});
 
-  it('should decode an encoded list', async () => {
+describe('decodeList', () => {
+  it('should pass', async () => {
     const list = await decodeList({encodedList: encodedList100k});
     list.length.should.equal(100000);
   });
 
+  it('should fail', async () => {
+    let err;
+    try {
+      await decodeList({encodedList: 'INVALID-XYZ'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    err.message.should.include('Could not decode encoded status list');
+  });
+});
+
+describe('createCredential', () => {
   it('should create a StatusList2021Credential credential', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
@@ -78,8 +93,10 @@ describe('main', () => {
       }
     });
   });
+});
 
-  it('should indicate that the status type matches', async () => {
+describe('statusTypeMatches', () => {
+  it('should find a match', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -103,7 +120,7 @@ describe('main', () => {
     result.should.equal(true);
   });
 
-  it('should indicate that the status type does not match', async () => {
+  it('should not find a match', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -127,7 +144,121 @@ describe('main', () => {
     result.should.equal(false);
   });
 
-  it('should verify the status of a credential', async () => {
+  it('should fail when "credential" is not an object', async () => {
+    let err;
+    let result;
+    try {
+      result = statusTypeMatches({credential: ''});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(TypeError);
+    err.message.should.contain('"credential" must be an object');
+  });
+
+  it('should fail when "@context" is not an array', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      // change the @context property to a string
+      credential['@context'] = id;
+      result = statusTypeMatches({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(TypeError);
+    err.message.should.contain('"@context" must be an array');
+  });
+
+  it('should fail when first "@context" value is unexpected', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      // change the @context property intentionally to an unexpected value
+      credential['@context'][0] = 'https://example.com/test/1';
+      result = statusTypeMatches({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('first "@context" value');
+  });
+
+  it('should fail when "credentialStatus" does not exist', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      // remove required credentialStatus property
+      delete credential.credentialStatus;
+      result = statusTypeMatches({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    result.should.equal(false);
+  });
+
+  it('should fail when "credentialStatus" is not an object in ' +
+    '"statusTypeMatches"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      // change credentialStatus to a string type
+      credential.credentialStatus = 'https://example.com/status/1#50000';
+      result = statusTypeMatches({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('"credentialStatus" is invalid');
+  });
+
+  it('should not match when "CONTEXTS.RL_V1" is not in ' +
+    '"@context"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      delete credential['@context'][1];
+      credential.credentialStatus = {
+        id: 'https://example.com/status/1#50000',
+        type: 'StatusList2021Entry',
+        statusListIndex: '50000',
+        statusListCredential: SLC.id
+      };
+      result = statusTypeMatches({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    result.should.equal(false);
+  });
+});
+
+describe('checkStatus', () => {
+  it('should verify one status of a credential', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -154,7 +285,7 @@ describe('main', () => {
     result.verified.should.equal(true);
   });
 
-  it('should verify the statuses of a credential.', async () => {
+  it('should verify multiple statuses of a credential', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -172,6 +303,12 @@ describe('main', () => {
         statusPurpose: 'revocation',
         statusListIndex: '67342',
         statusListCredential: SLC.id
+      }, {
+        id: 'https://example.com/status/1#67343',
+        type: 'StatusList2021Entry',
+        statusPurpose: 'suspension',
+        statusListIndex: '67343',
+        statusListCredential: SLC.id
       }],
       issuer: SLC.issuer,
     };
@@ -181,7 +318,7 @@ describe('main', () => {
     result.verified.should.equal(true);
   });
 
-  it('should fail to verify status with incorrect status type', async () => {
+  it('should fail with incorrect status type', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -210,8 +347,7 @@ describe('main', () => {
       '"StatusList2021Entry".');
   });
 
-  it('should not fail to verify VC if it has atleast one credential status ' +
-  'with correct type', async () => {
+  it('should pass when there is >= 1 matching type', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -245,7 +381,7 @@ describe('main', () => {
     should.not.exist(result.error);
   });
 
-  it('should fail to verify status with missing index', async () => {
+  it('should fail when missing index', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -273,37 +409,36 @@ describe('main', () => {
     result.error.message.should.equal('"statusListIndex" must be an integer.');
   });
 
-  it('should fail to verify status with missing "statusListCredential"',
-    async () => {
-      const credential = {
-        '@context': [
-          'https://www.w3.org/2018/credentials/v1',
-          VC_SL_CONTEXT_URL
-        ],
-        id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
-        type: ['VerifiableCredential', 'example:TestCredential'],
-        credentialSubject: {
-          id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
-          'example:test': 'foo'
-        },
-        credentialStatus: {
-          id: 'https://example.com/status/1#67342',
-          type: 'StatusList2021Entry',
-          statusPurpose: 'suspension',
-          statusListIndex: '67342'
-        },
-        issuer: SLC.issuer,
-      };
-      const result = await checkStatus({
-        credential, documentLoader, verifyStatusListCredential: false
-      });
-      result.verified.should.equal(false);
-      should.exist(result.error);
-      result.error.message.should.equal(
-        '"credentialStatus.statusListCredential" must be a string.');
+  it('should fail when missing "statusListCredential"', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#67342',
+        type: 'StatusList2021Entry',
+        statusPurpose: 'suspension',
+        statusListIndex: '67342'
+      },
+      issuer: SLC.issuer,
+    };
+    const result = await checkStatus({
+      credential, documentLoader, verifyStatusListCredential: false
     });
+    result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal(
+      '"credentialStatus.statusListCredential" must be a string.');
+  });
 
-  it('should fail to verify status for revoked credential', async () => {
+  it('should fail when missing "statusPurpose"', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -327,9 +462,12 @@ describe('main', () => {
       credential, documentLoader, verifyStatusListCredential: false
     });
     result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.message.should.equal(
+      '"credentialStatus.statusPurpose" must be a string.');
   });
 
-  it('should fail to verify status if documentLoader is unable to load ' +
+  it('should fail when documentLoader cannot load ' +
     '"statusListCredential"', async () => {
     const credential = {
       '@context': [
@@ -363,7 +501,7 @@ describe('main', () => {
       'URL "https://example.com/status/2".');
   });
 
-  it('should fail to verify status if "statusListCredential" type does not ' +
+  it('should fail when "statusListCredential" type does not ' +
     'include "StatusList2021Credential"', async () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
     // intentionally set SLC type to an invalid type
@@ -401,7 +539,7 @@ describe('main', () => {
       'include "StatusList2021Credential".');
   });
 
-  it('should fail to verify status if "credentialSubject" type is not ' +
+  it('should fail when "credentialSubject" type is not ' +
     '"StatusList2021"', async () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
     // intentionally set credential subject type to an invalid type
@@ -439,7 +577,7 @@ describe('main', () => {
       '"StatusList2021".');
   });
 
-  it('should fail to verify status if "credentialSubject.encodedList" ' +
+  it('should fail when "credentialSubject.encodedList" ' +
     'cannot not be decoded', async () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
     // intentionally set encodedList to an invalid value
@@ -474,10 +612,10 @@ describe('main', () => {
     result.verified.should.equal(false);
     should.exist(result.error);
     result.error.message.should.equal('Could not decode encoded status ' +
-      'list; reason: undefined');
+      'list; reason: incorrect header check');
   });
 
-  it('should fail to verify status on missing "credential" param', async () => {
+  it('should fail when missing "credential" param', async () => {
     let err;
     let result;
     try {
@@ -499,457 +637,48 @@ describe('main', () => {
     result.error.message.should.contain('"credential" must be an object');
   });
 
-  it('should fail to verify if credential is not an object for ' +
-    'statusTypeMatches"', async () => {
-    let err;
-    let result;
-    try {
-      result = statusTypeMatches({credential: ''});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(TypeError);
-    err.message.should.contain('"credential" must be an object');
-  });
-
-  it('should fail to verify if credential is not an object for ' +
-    '"assertStatusList2021Context"', async () => {
-    let err;
-    let result;
-    try {
-      result = assertStatusList2021Context({credential: ''});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(TypeError);
-    err.message.should.contain('"credential" must be an object');
-  });
-
-  it('should fail to verify if credential is not an object for ' +
-    '"getCredentialStatus"', async () => {
-    let err;
-    let result;
-    try {
-      result = getCredentialStatus({credential: ''});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(TypeError);
-    err.message.should.contain('"credential" must be an object');
-  });
-
-  it('should fail to verify if @context is not an array in ' +
-    '"statusTypeMatches"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      // change the @context property to a string
-      credential['@context'] = id;
-      result = statusTypeMatches({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(TypeError);
-    err.message.should.contain('"@context" must be an array');
-  });
-
-  it('should fail when the first "@context" value is unexpected in ' +
-    'statusTypeMatches"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      // change the @context property intentionally to an unexpected value
-      credential['@context'][0] = 'https://example.com/test/1';
-      result = statusTypeMatches({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(Error);
-    err.message.should.contain('first "@context" value');
-  });
-
-  it('should fail to verify if @context is not an array in ' +
-    '"assertStatusList2021Context"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      // change the @context property to a string
-      credential['@context'] = 'https://example.com/status/1';
-      result = assertStatusList2021Context({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(TypeError);
-    err.message.should.contain('"@context" must be an array');
-  });
-
-  it('should fail when the first "@context" value is unexpected in' +
-    '"assertStatusList2021Context"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      // change the @context property intentionally to an unexpected value
-      credential['@context'][0] = 'https://example.com/test/1';
-      result = assertStatusList2021Context({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(Error);
-    err.message.should.contain('first "@context" value');
-  });
-
-  it('should fail when "credentialStatus" does not exist in ' +
-    '"statusTypeMatches"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      // remove required credentialStatus property
-      delete credential.credentialStatus;
-      result = statusTypeMatches({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.not.exist(err);
-    result.should.equal(false);
-  });
-
-  it('should fail when "credentialStatus" is not an object in ' +
-    '"statusTypeMatches"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      // change credentialStatus to a string type
-      credential.credentialStatus = 'https://example.com/status/1#50000';
-      result = statusTypeMatches({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(Error);
-    err.message.should.contain('"credentialStatus" is invalid');
-  });
-
-  it('should return false when "CONTEXTS.RL_V1" is not in ' +
-    '"@contexts" in "statusTypeMatches"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      delete credential['@context'][1];
-      credential.credentialStatus = {
-        id: 'https://example.com/status/1#50000',
+  it('should fail when documentLoader is not a function', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
-        statusListIndex: '50000',
         statusListCredential: SLC.id
-      };
-      result = statusTypeMatches({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.not.exist(err);
-    result.should.equal(false);
-  });
-
-  it('should fail when "CONTEXTS.RL_V1" is not in "@contexts" ' +
-    'in "assertStatusList2021Context"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      delete credential['@context'][1];
-      result = assertStatusList2021Context({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(TypeError);
-    err.message.should.contain('@context" must include');
-  });
-
-  it('should fail when "credentialStatus" is not an object for ' +
-    '"getCredentialStatus"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    let err;
-    let result;
-    try {
-      delete credential.credentialStatus;
-      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(Error);
-    err.message.should.contain('"credentialStatus" is missing or invalid');
-  });
-
-  it('should fail when "credentialStatus.type" is not ' +
-  '"StatusList2021Entry" for "getCredentialStatus"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    credential.credentialStatus = {
-      id: 'https://example.com/status/1#67342',
-      type: 'InvalidType',
-      statusPurpose: 'revocation',
-      statusListIndex: '67342',
-      statusListCredential: SLC.id
-    };
-    let err;
-    let result;
-    try {
-      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(Error);
-    err.message.should.contain('"credentialStatus" with type ' +
-      '"StatusList2021Entry" and status purpose "revocation" not found.');
-  });
-
-  it('should not fail if credential has atleast one credential status ' +
-  'with correct type for "getCredentialStatus"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    credential.credentialStatus = [{
-      id: 'https://example.com/status/1#67342',
-      type: 'ex:NonmatchingStatusType',
-      statusPurpose: 'suspension',
-      statusListIndex: '67342',
-      statusListCredential: SLC.id
-    },
-    {
-      id: 'https://example.com/status/1#67342',
-      type: 'StatusList2021Entry',
-      statusPurpose: 'revocation',
-      statusListIndex: '67342',
-      statusListCredential: SLC.id
-    }];
-    let err;
-    let result;
-    try {
-      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
-    } catch(e) {
-      err = e;
-    }
-    should.not.exist(err);
-    should.exist(result);
-    result.should.eql(credential.credentialStatus[1]);
-  });
-
-  it('should fail if "credential.credentialStatus" is an empty array ' +
-  'for "getCredentialStatus"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    credential.credentialStatus = [ ];
-    let err;
-    let result;
-    try {
-      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.message.should.equal('"credentialStatus" with type ' +
-      '"StatusList2021Entry" and status purpose "revocation" not found.');
-  });
-
-  it('should fail if "credential.credentialStatus" has no status with ' +
-  'type matching "StatusList2021Entry" for "getCredentialStatus"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    credential.credentialStatus = [{
-      id: 'https://example.com/status/1#12345',
-      type: 'ex:NonmatchingStatusType',
-      statusPurpose: 'revocation',
-      statusListIndex: '12345',
-      statusListCredential: SLC.id
-    },
-    {
-      id: 'https://example.com/status/1#67342',
-      type: 'ex:NonmatchingStatusType',
-      statusPurpose: 'suspension',
-      statusListIndex: '67342',
-      statusListCredential: SLC.id
-    }];
-    let err;
-    let result;
-    try {
-      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.message.should.equal('"credentialStatus" with type ' +
-      '"StatusList2021Entry" and status purpose "revocation" not found.');
-  });
-
-  it('should return "credentialStatus" when "credentialStatus.type" is ' +
-  '"StatusList2021Entry" and "statusPurpose" matches for "getCredentialStatus"',
-  async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    credential.credentialStatus = {
-      id: 'https://example.com/status/1#67342',
-      type: 'StatusList2021Entry',
-      statusPurpose: 'revocation',
-      statusListIndex: '67342',
-      statusListCredential: SLC.id
-    };
-    let err;
-    let result;
-    try {
-      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
-    } catch(e) {
-      err = e;
-    }
-    should.not.exist(err);
-    should.exist(result);
-    result.should.eql(credential.credentialStatus);
-  });
-
-  it('should fail when "statusPurpose" is not specified for ' +
-  '"getCredentialStatus"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    credential.credentialStatus = {
-      id: 'https://example.com/status/1#67342',
-      type: 'StatusList2021Entry',
-      statusPurpose: 'revocation',
-      statusListIndex: '67342',
-      statusListCredential: SLC.id
-    };
-    let err;
-    let result;
-    try {
-      result = getCredentialStatus({credential});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.name.should.equal('TypeError');
-    err.message.should.equal('"statusPurpose" must be a string.');
-  });
-
-  it('should fail when "statusPurpose" does not match ' +
-  '"credentialStatus.statusPurpose" for "getCredentialStatus"', async () => {
-    const id = 'https://example.com/status/1';
-    const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
-    credential.credentialStatus = {
-      id: 'https://example.com/status/1#67342',
-      type: 'StatusList2021Entry',
-      statusPurpose: 'revocation',
-      statusListIndex: '67342',
-      statusListCredential: SLC.id
-    };
-    let err;
-    let result;
-    try {
-      result = getCredentialStatus({credential, statusPurpose: 'suspension'});
-    } catch(e) {
-      err = e;
-    }
-    should.exist(err);
-    should.not.exist(result);
-    err.should.be.instanceof(Error);
-    err.message.should.contain('"credentialStatus" with type ' +
-      '"StatusList2021Entry" and status purpose "suspension" not found.');
-  });
-
-  it('should fail to verify when documentLoader is not a function',
-    async () => {
-      const credential = {
-        '@context': [
-          'https://www.w3.org/2018/credentials/v1',
-          VC_SL_CONTEXT_URL
-        ],
-        id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
-        type: ['VerifiableCredential', 'example:TestCredential'],
-        credentialSubject: {
-          id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
-          'example:test': 'foo'
-        },
-        credentialStatus: {
-          id: 'https://example.com/status/1#67342',
-          type: 'StatusList2021Entry',
-          statusListCredential: SLC.id
-        }
-      };
-      const documentLoader = 'https://example.com/status/1';
-      let err;
-      let result;
-      try {
-        result = await checkStatus({
-          credential, documentLoader, verifyStatusListCredential: false
-        });
-      } catch(e) {
-        err = e;
       }
-      should.not.exist(err);
-      should.exist(result);
-      result.should.be.an('object');
-      result.should.have.property('verified');
-      result.verified.should.be.a('boolean');
-      result.verified.should.be.false;
-      result.should.have.property('error');
-      result.error.should.be.instanceof(TypeError);
-      result.error.message.should.contain(
-        '"documentLoader" must be a function');
-    });
+    };
+    const documentLoader = 'https://example.com/status/1';
+    let err;
+    let result;
+    try {
+      result = await checkStatus({
+        credential, documentLoader, verifyStatusListCredential: false
+      });
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.exist(result);
+    result.should.be.an('object');
+    result.should.have.property('verified');
+    result.verified.should.be.a('boolean');
+    result.verified.should.be.false;
+    result.should.have.property('error');
+    result.error.should.be.instanceof(TypeError);
+    result.error.message.should.contain(
+      '"documentLoader" must be a function');
+  });
 
-  it('should fail to verify when suite is not an object or array of ' +
-    'objects in checkStatus', async () => {
+  it('should fail when suite is not an object or array of ' +
+    'objects', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -1001,8 +730,8 @@ describe('main', () => {
       '"suite" must be an object or an array of objects');
   });
 
-  it('should fail to verify when "StatusList2021Credential" ' +
-    'is not valid', async () => {
+  // FIXME: not right, fix
+  it('should fail when "StatusList2021Credential" is invalid', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -1027,6 +756,8 @@ describe('main', () => {
     let err;
     let result;
     try {
+      // FIXME: this is not relevant to verifying the status list credential
+      // which is identified by `SLC.id`, not `credential`
       delete credential.type[1];
       result = await checkStatus({
         credential, documentLoader, suite: {}, verifyStatusListCredential: true
@@ -1046,7 +777,7 @@ describe('main', () => {
       '"StatusList2021Credential" not verified');
   });
 
-  it('should fail to verify for non-matching credential issuers', async () => {
+  it('should fail for non-matching credential issuers', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -1080,38 +811,326 @@ describe('main', () => {
       'and verifiable credential do not match.');
   });
 
-  it('should allow different issuers if verifyMatchingIssuers is false',
-    async () => {
-      const credential = {
-        '@context': [
-          'https://www.w3.org/2018/credentials/v1',
-          VC_SL_CONTEXT_URL,
-        ],
-        id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
-        type: ['VerifiableCredential', 'example:TestCredential'],
-        credentialSubject: {
-          id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
-          'example:test': 'foo',
-        },
-        credentialStatus: {
-          id: 'https://example.com/status/1#67342',
-          type: 'StatusList2021Entry',
-          statusPurpose: 'revocation',
-          statusListIndex: '67342',
-          statusListCredential: SLC.id,
-        },
-        // this issuer does not match the issuer for the mock SLC specified
-        // by `SLC.id` above
-        issuer: 'did:example:1234',
-      };
-      const result = await checkStatus({
-        credential,
-        documentLoader,
-        verifyStatusListCredential: false,
-        // this flag is set to allow different values for credential.issuer and
-        // SLC.issuer
-        verifyMatchingIssuers: false,
-      });
-      result.verified.should.equal(true);
+  it('should allow different issuers when "verifyMatchingIssuers" is ' +
+    'false', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL,
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo',
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#67342',
+        type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
+        statusListIndex: '67342',
+        statusListCredential: SLC.id,
+      },
+      // this issuer does not match the issuer for the mock SLC specified
+      // by `SLC.id` above
+      issuer: 'did:example:1234',
+    };
+    const result = await checkStatus({
+      credential,
+      documentLoader,
+      verifyStatusListCredential: false,
+      // this flag is set to allow different values for credential.issuer and
+      // SLC.issuer
+      verifyMatchingIssuers: false,
     });
+    result.verified.should.equal(true);
+  });
+});
+
+describe('assertStatusList2021Context', () => {
+  it('should fail when "credential" is not an object', async () => {
+    let err;
+    let result;
+    try {
+      result = assertStatusList2021Context({credential: ''});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(TypeError);
+    err.message.should.contain('"credential" must be an object');
+  });
+
+  it('should fail when "@context" is not an array', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      // change the @context property to a string
+      credential['@context'] = 'https://example.com/status/1';
+      result = assertStatusList2021Context({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(TypeError);
+    err.message.should.contain('"@context" must be an array');
+  });
+
+  it('should fail when first "@context" value is unexpected', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      // change the @context property intentionally to an unexpected value
+      credential['@context'][0] = 'https://example.com/test/1';
+      result = assertStatusList2021Context({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('first "@context" value');
+  });
+
+  it('should fail when "CONTEXTS.RL_V1" is not in "@context"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      delete credential['@context'][1];
+      result = assertStatusList2021Context({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(TypeError);
+    err.message.should.contain('@context" must include');
+  });
+});
+
+describe('getCredentialStatus', () => {
+  it('should fail when "credential" is not an object', async () => {
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential: ''});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(TypeError);
+    err.message.should.contain('"credential" must be an object');
+  });
+
+  it('should fail when "credentialStatus" is not an object', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    let err;
+    let result;
+    try {
+      delete credential.credentialStatus;
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('"credentialStatus" is missing or invalid');
+  });
+
+  it('should fail when "credentialStatus.type" is not ' +
+    '"StatusList2021Entry"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'InvalidType',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('"credentialStatus" with type ' +
+      '"StatusList2021Entry" and status purpose "revocation" not found.');
+  });
+
+  it('should pass when credential has >= 1 credential status ' +
+    'with correct type', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = [{
+      id: 'https://example.com/status/1#67342',
+      type: 'ex:NonmatchingStatusType',
+      statusPurpose: 'suspension',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    },
+    {
+      id: 'https://example.com/status/1#67342',
+      type: 'StatusList2021Entry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    }];
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.exist(result);
+    result.should.eql(credential.credentialStatus[1]);
+  });
+
+  it('should fail when "credential.credentialStatus" is an empty ' +
+    'array', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = [ ];
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.message.should.equal('"credentialStatus" with type ' +
+      '"StatusList2021Entry" and status purpose "revocation" not found.');
+  });
+
+  it('should fail when "credential.credentialStatus" has no status with type ' +
+    'matching "StatusList2021Entry"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = [{
+      id: 'https://example.com/status/1#12345',
+      type: 'ex:NonmatchingStatusType',
+      statusPurpose: 'revocation',
+      statusListIndex: '12345',
+      statusListCredential: SLC.id
+    },
+    {
+      id: 'https://example.com/status/1#67342',
+      type: 'ex:NonmatchingStatusType',
+      statusPurpose: 'suspension',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    }];
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.message.should.equal('"credentialStatus" with type ' +
+      '"StatusList2021Entry" and status purpose "revocation" not found.');
+  });
+
+  it('should pass "credentialStatus" when "credentialStatus.type" is ' +
+    '"StatusList2021Entry" and "statusPurpose" matches', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'StatusList2021Entry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'revocation'});
+    } catch(e) {
+      err = e;
+    }
+    should.not.exist(err);
+    should.exist(result);
+    result.should.eql(credential.credentialStatus);
+  });
+
+  it('should fail when "statusPurpose" is not specified', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'StatusList2021Entry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.name.should.equal('TypeError');
+    err.message.should.equal('"statusPurpose" must be a string.');
+  });
+
+  it('should fail when "statusPurpose" does not match ' +
+    '"credentialStatus.statusPurpose"', async () => {
+    const id = 'https://example.com/status/1';
+    const list = await createList({length: 100000});
+    const credential = await createCredential({id, list});
+    credential.credentialStatus = {
+      id: 'https://example.com/status/1#67342',
+      type: 'StatusList2021Entry',
+      statusPurpose: 'revocation',
+      statusListIndex: '67342',
+      statusListCredential: SLC.id
+    };
+    let err;
+    let result;
+    try {
+      result = getCredentialStatus({credential, statusPurpose: 'suspension'});
+    } catch(e) {
+      err = e;
+    }
+    should.exist(err);
+    should.not.exist(result);
+    err.should.be.instanceof(Error);
+    err.message.should.contain('"credentialStatus" with type ' +
+      '"StatusList2021Entry" and status purpose "suspension" not found.');
+  });
 });

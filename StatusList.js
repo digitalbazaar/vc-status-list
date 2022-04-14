@@ -25,7 +25,15 @@ export class StatusList {
   }
 
   static async decode({encodedList}) {
-    const buffer = await Bitstring.decodeBits({encoded: encodedList});
-    return new StatusList({buffer});
+    try {
+      const buffer = await Bitstring.decodeBits({encoded: encodedList});
+      return new StatusList({buffer});
+    } catch(e) {
+      if(e instanceof Error) {
+        throw e;
+      }
+      throw new Error(
+        `Could not decode encoded status list; reason: ${e}`);
+    }
   }
 }
