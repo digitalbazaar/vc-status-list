@@ -9,21 +9,24 @@ import {extendContextLoader} from 'jsonld-signatures';
 import {slCredential as SLC} from './mock-sl-credential.js';
 import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import vc from '@digitalbazaar/vc';
-import {Ed25519VerificationKey2020} from
-  '@digitalbazaar/ed25519-verification-key-2020';
+// import {Ed25519VerificationKey2020} from
+//   '@digitalbazaar/ed25519-verification-key-2020';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
+import suiteCtx2020 from 'ed25519-signature-2020-context';
 
 const {defaultDocumentLoader} = vc;
 
 const VC_SL_CONTEXT_URL = statusListCtx.constants.CONTEXT_URL_V1;
 const VC_SL_CONTEXT = statusListCtx.contexts.get(VC_SL_CONTEXT_URL);
+const SUITE_CONTEXT_URL = suiteCtx2020.constants.CONTEXT_URL;
+const SUITE_CONTEXT = suiteCtx2020.contexts.get(SUITE_CONTEXT_URL);
 
 const encodedList100k =
   'H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA';
 
 const documents = new Map();
 documents.set(VC_SL_CONTEXT_URL, VC_SL_CONTEXT);
-
+documents.set(SUITE_CONTEXT_URL, SUITE_CONTEXT);
 documents.set(SLC.id, SLC);
 
 const documentLoader = extendContextLoader(async url => {
@@ -282,12 +285,29 @@ describe('checkStatus', () => {
       },
       issuer: SLC.issuer,
     };
-    const keyPair = await Ed25519VerificationKey2020.generate();
-    console.log(keyPair, '<><><><>keyPair');
-    const suite = new Ed25519Signature2020({key: keyPair});
-    console.log(suite, '<><><><suite');
-    const signedVC = await vc.issue({credential, suite, documentLoader});
-    console.log(signedVC, '<><><><>signedVC');
+    // const mockKeyPair2020 = {
+    //   type: 'Ed25519VerificationKey2020',
+    //   controller: SLC.issuer,
+    //   id: SLC.issuer + '#z6MknCCLeeHBUaHu4aHSVLDCYQW9gjVJ7a63FpMvtuVMy53T',
+    //   publicKeyMultibase: 'z6MknCCLeeHBUaHu4aHSVLDCYQW9gjVJ7a63FpMvtuVMy53T',
+    // eslint-disable-next-line max-len
+    //   privateKeyMultibase: 'zrv2EET2WWZ8T1Jbg4fEH5cQxhbUS22XxdweypUbjWVzv1Y' +
+    //     'D6VqYuW6LH7heQCNYQCuoKaDwvv2qCWz3uBzG2xesqmf'
+    // };
+    // const keyPair = await Ed25519VerificationKey2020.from({
+    //   ...mockKeyPair2020
+    // });
+    const suite = new Ed25519Signature2020();
+    // eslint-disable-next-line max-len
+    // const signedSlc = await vc.issue({credential: SLC, suite, documentLoader});
+    const result = await checkStatus({
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
+    });
+    console.log(result, '<><><><>result');
+    // result.verified.should.equal(true);
   });
   it('should verify one status of a credential', async () => {
     const credential = {
