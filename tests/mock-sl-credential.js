@@ -19,7 +19,7 @@ export const slCredential = {
   id: 'https://example.com/status/1',
   issuer: 'did:key:z6MkhgCF7fgo4isGpbwRRPRh8kNyQ6VtvmqYcVMqPuzS2pWY',
   issuanceDate: '2021-03-10T04:24:12.164Z',
-  type: [ 'VerifiableCredential', 'StatusList2021Credential' ],
+  type: ['VerifiableCredential', 'StatusList2021Credential'],
   credentialSubject: {
     id: 'https://example.com/status/1#list',
     type: 'StatusList2021',
@@ -34,4 +34,19 @@ export const slCredential = {
     proofValue: 'zsoPiKg5wabrkKMJqv8k5d2gEbVs7pfQK2591zcfntrkGmDAqSUSiK4xrmz' +
       'NmQNTNL8tc6kaY77fodY5Gtu2QAVC'
   }
+};
+
+// {
+//   "seedMultibase": "z1AiyDyAWVtpFyoD3cqYuZnnuFQBs7gW4wyrdUnpVS3cPNg",
+//   "id": "did:key:z6MkhgCF7fgo4isGpbwRRPRh8kNyQ6VtvmqYcVMqPuzS2pWY"
+// }
+
+export const controllerDoc2020 = {
+  '@context': [
+    'https://w3id.org/security/suites/ed25519-2020/v1'
+  ],
+  type: 'Ed25519VerificationKey2020',
+  controller: slCredential.issuer,
+  id: slCredential.issuer + '#z6MkhgCF7fgo4isGpbwRRPRh8kNyQ6VtvmqYcVMqPuzS2pWY',
+  publicKeyMultibase: 'z1AiyDyAWVtpFyoD3cqYuZnnuFQBs7gW4wyrdUnpVS3cPNg'
 };
