@@ -9,6 +9,9 @@ import {extendContextLoader} from 'jsonld-signatures';
 import {slCredential as SLC} from './mock-sl-credential.js';
 import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import vc from '@digitalbazaar/vc';
+import {Ed25519VerificationKey2020} from
+  '@digitalbazaar/ed25519-verification-key-2020';
+import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 
 const {defaultDocumentLoader} = vc;
 
@@ -258,6 +261,34 @@ describe('statusTypeMatches', () => {
 });
 
 describe('checkStatus', () => {
+  it.only('should verify a valid status list vc', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#67342',
+        type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
+        statusListIndex: '67342',
+        statusListCredential: SLC.id
+      },
+      issuer: SLC.issuer,
+    };
+    const keyPair = await Ed25519VerificationKey2020.generate();
+    console.log(keyPair, '<><><><>keyPair');
+    const suite = new Ed25519Signature2020({key: keyPair});
+    console.log(suite, '<><><><suite');
+    const signedVC = await vc.issue({credential, suite, documentLoader});
+    console.log(signedVC, '<><><><>signedVC');
+  });
   it('should verify one status of a credential', async () => {
     const credential = {
       '@context': [
