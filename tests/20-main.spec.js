@@ -6,7 +6,7 @@ import {
   assertStatusList2021Context, getCredentialStatus
 } from '..';
 import {extendContextLoader} from 'jsonld-signatures';
-import {slCredential as SLC} from './mock-sl-credential.js';
+import {slCredential as SLC, controllerDoc2020} from './mock-sl-credential.js';
 import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import vc from '@digitalbazaar/vc';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
@@ -26,8 +26,12 @@ const documents = new Map();
 documents.set(VC_SL_CONTEXT_URL, VC_SL_CONTEXT);
 documents.set(SUITE_CONTEXT_URL, SUITE_CONTEXT);
 documents.set(SLC.id, SLC);
+documents.set(SLC.issuer, controllerDoc2020);
 
 const documentLoader = extendContextLoader(async url => {
+  if(url.startsWith('did:')) {
+    url = url.substring(0, url.indexOf('#'));
+  }
   const doc = documents.get(url);
   if(doc) {
     return {
