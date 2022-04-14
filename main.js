@@ -219,21 +219,10 @@ async function _checkStatus({
 
   // decode list from SL VC
   const {encodedList} = sl;
-  let list;
-  try {
-    list = await decodeList({encodedList});
-  } catch(e) {
-    const err = new Error(
-      `Could not decode encoded status list; reason: ${e.message}`);
-    err.cause = e;
-    throw err;
-  }
+  const list = await decodeList({encodedList});
 
   // check VC's SL index for the status
   const verified = !list.getStatus(index);
-
-  // TODO: return anything else? returning `slCredential` may be too unwieldy
-  // given its potentially large size
   return {verified};
 }
 
