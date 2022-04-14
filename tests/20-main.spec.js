@@ -134,7 +134,7 @@ describe('statusTypeMatches', () => {
       },
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
-        type: 'NotMatch',
+        type: 'ex:NotMatch',
         statusListIndex: '67342',
         statusListCredential: SLC.id
       },
@@ -730,17 +730,17 @@ describe('checkStatus', () => {
       '"suite" must be an object or an array of objects');
   });
 
-  // FIXME: not right, fix
-  it('should fail when "StatusList2021Credential" is invalid', async () => {
+  it('should fail when "StatusList2021Credential" is not ' +
+    'verified', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
         VC_SL_CONTEXT_URL
       ],
       id: 'urn:uuid:e74fb1d6-7926-11ea-8e11-10bf48838a41',
-      issuer: 'exampleissuer',
+      issuer: SLC.issuer,
       issuanceDate: '2021-03-10T04:24:12.164Z',
-      type: ['VerifiableCredential', 'StatusList2021Credential'],
+      type: ['VerifiableCredential', 'example:TestCredential'],
       credentialSubject: {
         id: 'urn:uuid:011e064e-7927-11ea-8975-10bf48838a41',
         'example:test': 'bar'
@@ -756,9 +756,9 @@ describe('checkStatus', () => {
     let err;
     let result;
     try {
-      // FIXME: this is not relevant to verifying the status list credential
-      // which is identified by `SLC.id`, not `credential`
-      delete credential.type[1];
+      // `SLC` is not a valid status list credential, so any call with
+      // `verifyStatusListCredential: true` with a credential that references
+      // `SLC.id` will always fail
       result = await checkStatus({
         credential, documentLoader, suite: {}, verifyStatusListCredential: true
       });
