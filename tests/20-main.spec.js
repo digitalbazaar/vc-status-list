@@ -372,6 +372,45 @@ describe('checkStatus', () => {
       'No matching proofs found in the given document.');
   });
 
+  it('should fail to verify status list vc that has been tampered with',
+    async () => {
+      const invalidSLC = JSON.parse(JSON.stringify(SLC));
+      // intentionally change it's type
+      invalidSLC.type = ['VerifiableCredential', 'ex:Invalid'];
+      invalidSLC.id = 'https://example.com/status/tampered-slc';
+      documents.set(invalidSLC.id, invalidSLC);
+      const credential = {
+        '@context': [
+          'https://www.w3.org/2018/credentials/v1',
+          VC_SL_CONTEXT_URL
+        ],
+        id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+        type: ['VerifiableCredential', 'example:TestCredential'],
+        credentialSubject: {
+          id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+          'example:test': 'foo'
+        },
+        credentialStatus: {
+          id: 'https://example.com/status/1#67342',
+          type: 'StatusList2021Entry',
+          statusPurpose: 'revocation',
+          statusListIndex: '67342',
+          statusListCredential: invalidSLC.id
+        },
+        issuer: invalidSLC.issuer,
+      };
+      const suite = new Ed25519Signature2020();
+      const result = await checkStatus({
+        credential,
+        suite,
+        documentLoader,
+        verifyStatusListCredential: true
+      });
+      result.verified.should.equal(false);
+      should.exist(result.error);
+      result.error.cause.errors[0].message.should.equal('Invalid signature.');
+    });
+
   it('should verify with an invalid status list vc when ' +
     '"verifyStatusListCredential" is set to "false"', async () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
