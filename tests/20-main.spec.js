@@ -341,7 +341,7 @@ describe('checkStatus', () => {
   });
 
   it('should verify an invalid status list vc when ' +
-  '"verifyStatusListCredential" is set to "false"', async () => {
+    '"verifyStatusListCredential" is set to "false"', async () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
     delete invalidSLC.proof;
     invalidSLC.id = 'https://example.com/status/no-proof-invalid-slc';
