@@ -302,6 +302,38 @@ describe('checkStatus', () => {
     result.verified.should.equal(true);
   });
 
+  it('should use default value when "verifyStatusListCredential" is not ' +
+    'specified', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#67342',
+        type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
+        statusListIndex: '67342',
+        statusListCredential: SLC.id
+      },
+      issuer: SLC.issuer,
+    };
+    const suite = new Ed25519Signature2020();
+    const result = await checkStatus({
+      credential,
+      suite,
+      documentLoader,
+    });
+    should.not.exist(result.error);
+    result.verified.should.equal(true);
+  });
+
   it('should fail to verify an invalid status list vc', async () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
     delete invalidSLC.proof;
@@ -340,7 +372,7 @@ describe('checkStatus', () => {
       'No matching proofs found in the given document.');
   });
 
-  it('should verify an invalid status list vc when ' +
+  it('should verify with an invalid status list vc when ' +
     '"verifyStatusListCredential" is set to "false"', async () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
     delete invalidSLC.proof;
