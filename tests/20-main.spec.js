@@ -32,7 +32,7 @@ const didKeyDriver = didKey.driver();
 
 const documentLoader = extendContextLoader(async url => {
   let doc;
-  if(url.startsWith('did:key')) {
+  if(url.startsWith('did:key:')) {
     doc = await didKeyDriver.get({url});
   } else {
     doc = documents.get(url);
