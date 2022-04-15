@@ -1,6 +1,6 @@
 # vc-status-list ChangeLog
 
-## 3.0.0 - 2022-04-TBD
+## 3.0.0 - 2022-04-15
 
 ### Changed
 - **BREAKING**: Use `@digitalbazaar/vc-status-list-context` v3.0. Rename
