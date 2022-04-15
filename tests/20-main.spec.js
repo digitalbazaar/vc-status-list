@@ -5,8 +5,9 @@ import {
   createList, decodeList, createCredential, checkStatus, statusTypeMatches,
   assertStatusList2021Context, getCredentialStatus
 } from '..';
+import * as didKey from '@digitalbazaar/did-method-key';
 import {extendContextLoader} from 'jsonld-signatures';
-import {slCredential as SLC, controllerDoc2020} from './mock-sl-credential.js';
+import {slCredential as SLC} from './mock-sl-credential.js';
 import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import vc from '@digitalbazaar/vc';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
@@ -26,13 +27,16 @@ const documents = new Map();
 documents.set(VC_SL_CONTEXT_URL, VC_SL_CONTEXT);
 documents.set(SUITE_CONTEXT_URL, SUITE_CONTEXT);
 documents.set(SLC.id, SLC);
-documents.set(SLC.issuer, controllerDoc2020);
+
+const didKeyDriver = didKey.driver();
 
 const documentLoader = extendContextLoader(async url => {
-  if(url.startsWith('did:')) {
-    url = url.substring(0, url.indexOf('#'));
+  let doc;
+  if(url.startsWith('did:key')) {
+    doc = await didKeyDriver.get({url});
+  } else {
+    doc = documents.get(url);
   }
-  const doc = documents.get(url);
   if(doc) {
     return {
       contextUrl: null,
@@ -266,7 +270,7 @@ describe('statusTypeMatches', () => {
 });
 
 describe('checkStatus', () => {
-  it.only('should verify a valid status list vc', async () => {
+  it('should verify a valid status list vc', async () => {
     const credential = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -294,9 +298,83 @@ describe('checkStatus', () => {
       documentLoader,
       verifyStatusListCredential: true
     });
-    console.log(result, '<><><><>result');
-    // result.verified.should.equal(true);
+    should.not.exist(result.error);
+    result.verified.should.equal(true);
   });
+
+  it('should fail to verify an invalid status list vc', async () => {
+    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    delete invalidSLC.proof;
+    invalidSLC.id = 'https://example.com/status/no-proof-slc';
+    documents.set(invalidSLC.id, invalidSLC);
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#67342',
+        type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
+        statusListIndex: '67342',
+        statusListCredential: invalidSLC.id
+      },
+      issuer: invalidSLC.issuer,
+    };
+    const suite = new Ed25519Signature2020();
+    const result = await checkStatus({
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
+    });
+    result.verified.should.equal(false);
+    should.exist(result.error);
+    result.error.cause.errors[0].message.should.equal(
+      'No matching proofs found in the given document.');
+  });
+
+  it('should verify an invalid status list vc when ' +
+  '"verifyStatusListCredential" is set to "false"', async () => {
+    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    delete invalidSLC.proof;
+    invalidSLC.id = 'https://example.com/status/no-proof-invalid-slc';
+    documents.set(invalidSLC.id, invalidSLC);
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/1#67342',
+        type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
+        statusListIndex: '67342',
+        statusListCredential: invalidSLC.id
+      },
+      issuer: invalidSLC.issuer,
+    };
+    const result = await checkStatus({
+      credential,
+      documentLoader,
+      verifyStatusListCredential: false
+    });
+    should.not.exist(result.error);
+    result.verified.should.equal(true);
+  });
+
   it('should verify one status of a credential', async () => {
     const credential = {
       '@context': [
@@ -318,9 +396,14 @@ describe('checkStatus', () => {
       },
       issuer: SLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
     });
+    should.not.exist(result.error);
     result.verified.should.equal(true);
   });
 
@@ -351,9 +434,14 @@ describe('checkStatus', () => {
       }],
       issuer: SLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
     });
+    should.not.exist(result.error);
     result.verified.should.equal(true);
   });
 
@@ -377,8 +465,12 @@ describe('checkStatus', () => {
       },
       issuer: SLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
     });
     result.verified.should.equal(false);
     should.exist(result.error);
@@ -413,11 +505,15 @@ describe('checkStatus', () => {
       }],
       issuer: SLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
     });
-    result.verified.should.equal(true);
     should.not.exist(result.error);
+    result.verified.should.equal(true);
   });
 
   it('should fail when missing index', async () => {
@@ -440,8 +536,12 @@ describe('checkStatus', () => {
       },
       issuer: SLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
     });
     result.verified.should.equal(false);
     should.exist(result.error);
@@ -468,8 +568,12 @@ describe('checkStatus', () => {
       },
       issuer: SLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
     });
     result.verified.should.equal(false);
     should.exist(result.error);
@@ -497,8 +601,12 @@ describe('checkStatus', () => {
       },
       issuer: SLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
     });
     result.verified.should.equal(false);
     should.exist(result.error);
@@ -530,8 +638,12 @@ describe('checkStatus', () => {
       },
       issuer: SLC.issuer,
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
-      credential, documentLoader, verifyStatusListCredential: false
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
     });
     result.verified.should.equal(false);
     should.exist(result.error);
@@ -583,7 +695,7 @@ describe('checkStatus', () => {
     const invalidSLC = JSON.parse(JSON.stringify(SLC));
     // intentionally set credential subject type to an invalid type
     invalidSLC.credentialSubject.type = 'InvalidType';
-    invalidSLC.id = 'https://example.com/status/invalid-rl-type';
+    invalidSLC.id = 'https://example.com/status/invalid-sl-type';
 
     documents.set(invalidSLC.id, invalidSLC);
 
@@ -655,22 +767,17 @@ describe('checkStatus', () => {
   });
 
   it('should fail when missing "credential" param', async () => {
-    let err;
-    let result;
-    try {
-      result = await checkStatus({
-        documentLoader, verifyStatusListCredential: false
-      });
-      result.verified.should.equal(false);
-    } catch(e) {
-      err = e;
-    }
-    should.not.exist(err);
+    const suite = new Ed25519Signature2020();
+    const result = await checkStatus({
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
+    });
     should.exist(result);
     result.should.be.an('object');
     result.should.have.property('verified');
     result.verified.should.be.a('boolean');
-    result.verified.should.be.false;
+    result.verified.should.equal(false);
     result.should.have.property('error');
     result.error.should.be.instanceof(TypeError);
     result.error.message.should.contain('"credential" must be an object');
@@ -695,16 +802,14 @@ describe('checkStatus', () => {
       }
     };
     const documentLoader = 'https://example.com/status/1';
-    let err;
-    let result;
-    try {
-      result = await checkStatus({
-        credential, documentLoader, verifyStatusListCredential: false
-      });
-    } catch(e) {
-      err = e;
-    }
-    should.not.exist(err);
+    const suite = new Ed25519Signature2020();
+    const result = await checkStatus({
+      suite,
+      credential,
+      documentLoader,
+      verifyStatusListCredential: true
+    });
+
     should.exist(result);
     result.should.be.an('object');
     result.should.have.property('verified');
@@ -839,13 +944,16 @@ describe('checkStatus', () => {
       // by `SLC.id` above
       issuer: 'did:example:1234',
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
+      suite,
       credential,
       documentLoader,
-      verifyStatusListCredential: false,
+      verifyStatusListCredential: true,
       verifyMatchingIssuers: true,
     });
     result.verified.should.equal(false);
+    should.exist(result.error);
     result.error.message.should.equal('Issuers of the status list credential ' +
       'and verifiable credential do not match.');
   });
@@ -874,14 +982,17 @@ describe('checkStatus', () => {
       // by `SLC.id` above
       issuer: 'did:example:1234',
     };
+    const suite = new Ed25519Signature2020();
     const result = await checkStatus({
       credential,
+      suite,
       documentLoader,
-      verifyStatusListCredential: false,
+      verifyStatusListCredential: true,
       // this flag is set to allow different values for credential.issuer and
       // SLC.issuer
       verifyMatchingIssuers: false,
     });
+    should.not.exist(result.error);
     result.verified.should.equal(true);
   });
 });
