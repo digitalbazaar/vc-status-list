@@ -4,19 +4,19 @@
 import {
   createList, decodeList, createCredential, checkStatus, statusTypeMatches,
   assertStatusList2021Context, getCredentialStatus
-} from '..';
+} from '../lib/index.js';
 import * as didKey from '@digitalbazaar/did-method-key';
-import {extendContextLoader} from 'jsonld-signatures';
+import jsigs from 'jsonld-signatures';
 import {
   slCredentialRevocation as SLCRevocation,
   slCredentialSuspension as SLCSuspension
 } from './mock-sl-credentials.js';
 import statusListCtx from '@digitalbazaar/vc-status-list-context';
-import vc from '@digitalbazaar/vc';
+import {defaultDocumentLoader} from '@digitalbazaar/vc';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import suiteCtx2020 from 'ed25519-signature-2020-context';
 
-const {defaultDocumentLoader} = vc;
+const {extendContextLoader} = jsigs;
 
 const VC_SL_CONTEXT_URL = statusListCtx.constants.CONTEXT_URL_V1;
 const VC_SL_CONTEXT = statusListCtx.contexts.get(VC_SL_CONTEXT_URL);
