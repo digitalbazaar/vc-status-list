@@ -1,4 +1,4 @@
-# vc-status-list ChangeLog
+# @digitalbazaar/vc-status-list ChangeLog
 
 ## 5.0.0 - 2022-xx-xx
 
