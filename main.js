@@ -9,6 +9,8 @@ import statusListCtx from '@digitalbazaar/vc-status-list-context';
 const VC_V1_CONTEXT_URL = credentialsCtx.constants.CREDENTIALS_CONTEXT_V1_URL;
 const SL_V1_CONTEXT_URL = statusListCtx.constants.CONTEXT_URL_V1;
 
+export { StatusList };
+
 export async function createList({length}) {
   return new StatusList({length});
 }
