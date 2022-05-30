@@ -1,5 +1,10 @@
 # vc-status-list ChangeLog
 
+## 3.1.0 - 2022-05-xx
+
+### Added
+- Export `StatusList` utility class.
+
 ## 3.0.0 - 2022-04-15
 
 ### Changed
