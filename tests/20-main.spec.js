@@ -489,6 +489,44 @@ describe('checkStatus', () => {
     result.verified.should.equal(true);
   });
 
+  it('should fail to verify if status purpose of credential does not match ' +
+    'the status purpose of status list credential', async () => {
+    const credential = {
+      '@context': [
+        'https://www.w3.org/2018/credentials/v1',
+        VC_SL_CONTEXT_URL
+      ],
+      id: 'urn:uuid:a0418a78-7924-11ea-8a23-10bf48838a41',
+      type: ['VerifiableCredential', 'example:TestCredential'],
+      credentialSubject: {
+        id: 'urn:uuid:4886029a-7925-11ea-9274-10bf48838a41',
+        'example:test': 'foo'
+      },
+      credentialStatus: {
+        id: 'https://example.com/status/2#67342',
+        type: 'StatusList2021Entry',
+        statusPurpose: 'suspension',
+        statusListIndex: '67342',
+        // intentionally point the statusListCredential the
+        // status list credential with status purpose "revocation".
+        statusListCredential: SLCRevocation.id
+      },
+      issuer: SLCRevocation.issuer,
+    };
+    const suite = new Ed25519Signature2020();
+    const result = await checkStatus({
+      credential,
+      suite,
+      documentLoader,
+      verifyStatusListCredential: true
+    });
+    should.exist(result.error);
+    result.error.message.should.equal(
+      'The status purpose "revocation" of status list credential does not ' +
+      'match the status purpose "suspension" of the credential.');
+    result.verified.should.equal(false);
+  });
+
   it('should verify multiple statuses of a credential', async () => {
     const credential = {
       '@context': [
