@@ -7,7 +7,10 @@ import {
 } from '..';
 import * as didKey from '@digitalbazaar/did-method-key';
 import {extendContextLoader} from 'jsonld-signatures';
-import {slCredential as SLC} from './mock-sl-credential.js';
+import {
+  slCredentialRevocation as SLCRevocation
+  // slCredentialSuspension as SLCSuspension
+} from './mock-sl-credentials.js';
 import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import vc from '@digitalbazaar/vc';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
@@ -26,7 +29,8 @@ const encodedList100k =
 const documents = new Map();
 documents.set(VC_SL_CONTEXT_URL, VC_SL_CONTEXT);
 documents.set(SUITE_CONTEXT_URL, SUITE_CONTEXT);
-documents.set(SLC.id, SLC);
+documents.set(SLCRevocation.id, SLCRevocation);
+// documents.set(SLCSuspension.id, SLCSuspension);
 
 const didKeyDriver = didKey.driver();
 
@@ -126,9 +130,9 @@ describe('statusTypeMatches', () => {
         id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const result = statusTypeMatches({credential});
     result.should.equal(true);
@@ -150,9 +154,9 @@ describe('statusTypeMatches', () => {
         id: 'https://example.com/status/1#67342',
         type: 'ex:NotMatch',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const result = statusTypeMatches({credential});
     result.should.equal(false);
@@ -265,7 +269,7 @@ describe('statusTypeMatches', () => {
         id: 'https://example.com/status/1#50000',
         type: 'StatusList2021Entry',
         statusListIndex: '50000',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       };
       result = statusTypeMatches({credential});
     } catch(e) {
@@ -294,9 +298,9 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -327,9 +331,9 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -342,9 +346,9 @@ describe('checkStatus', () => {
   });
 
   it('should fail to verify an invalid status list vc', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
     delete invalidSLC.proof;
-    invalidSLC.id = 'https://example.com/status/no-proof-slc';
+    invalidSLC.id = 'https://example.com/status/no-proof-SLCRevocation';
     documents.set(invalidSLC.id, invalidSLC);
     const credential = {
       '@context': [
@@ -381,10 +385,10 @@ describe('checkStatus', () => {
 
   it('should fail to verify status list vc that has been tampered with',
     async () => {
-      const invalidSLC = JSON.parse(JSON.stringify(SLC));
+      const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
       // intentionally change it's type
       invalidSLC.type = ['VerifiableCredential', 'ex:Invalid'];
-      invalidSLC.id = 'https://example.com/status/tampered-slc';
+      invalidSLC.id = 'https://example.com/status/tampered-SLCRevocation';
       documents.set(invalidSLC.id, invalidSLC);
       const credential = {
         '@context': [
@@ -420,9 +424,9 @@ describe('checkStatus', () => {
 
   it('should verify with an invalid status list vc when ' +
     '"verifyStatusListCredential" is set to "false"', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
     delete invalidSLC.proof;
-    invalidSLC.id = 'https://example.com/status/no-proof-invalid-slc';
+    invalidSLC.id = 'https://example.com/status/no-proof-invalid-SLCRevocation';
     documents.set(invalidSLC.id, invalidSLC);
     const credential = {
       '@context': [
@@ -470,9 +474,9 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -502,15 +506,15 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       }, {
         id: 'https://example.com/status/1#67343',
         type: 'StatusList2021Entry',
         statusPurpose: 'suspension',
         statusListIndex: '67343',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       }],
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -539,9 +543,9 @@ describe('checkStatus', () => {
         id: 'https://example.com/status/1#67342',
         type: 'ex:NonmatchingStatusType',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -573,15 +577,15 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       }, {
         id: 'https://example.com/status/1#67342',
         type: 'ex:NonmatchingStatusType',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       }],
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -610,9 +614,9 @@ describe('checkStatus', () => {
         id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -644,7 +648,7 @@ describe('checkStatus', () => {
         statusPurpose: 'suspension',
         statusListIndex: '67342'
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -675,9 +679,9 @@ describe('checkStatus', () => {
         id: 'https://example.com/status/1#50000',
         type: 'StatusList2021Entry',
         statusListIndex: '50000',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -714,7 +718,7 @@ describe('checkStatus', () => {
         // in documents
         statusListCredential: 'https://example.com/status/2'
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -732,10 +736,10 @@ describe('checkStatus', () => {
 
   it('should fail when "statusListCredential" type does not ' +
     'include "StatusList2021Credential"', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLC));
-    // intentionally set SLC type to an invalid type
+    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
+    // intentionally set SLCRevocation type to an invalid type
     invalidSLC.type = ['InvalidType'];
-    invalidSLC.id = 'https://example.com/status/invalid-slc-type';
+    invalidSLC.id = 'https://example.com/status/invalid-SLCRevocation-type';
 
     documents.set(invalidSLC.id, invalidSLC);
 
@@ -757,7 +761,7 @@ describe('checkStatus', () => {
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const result = await checkStatus({
       credential, documentLoader, verifyStatusListCredential: false
@@ -770,7 +774,7 @@ describe('checkStatus', () => {
 
   it('should fail when "credentialSubject" type is not ' +
     '"StatusList2021"', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
     // intentionally set credential subject type to an invalid type
     invalidSLC.credentialSubject.type = 'InvalidType';
     invalidSLC.id = 'https://example.com/status/invalid-sl-type';
@@ -795,7 +799,7 @@ describe('checkStatus', () => {
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const result = await checkStatus({
       credential, documentLoader, verifyStatusListCredential: false
@@ -808,7 +812,7 @@ describe('checkStatus', () => {
 
   it('should fail when "credentialSubject.encodedList" ' +
     'cannot not be decoded', async () => {
-    const invalidSLC = JSON.parse(JSON.stringify(SLC));
+    const invalidSLC = JSON.parse(JSON.stringify(SLCRevocation));
     // intentionally set encodedList to an invalid value
     invalidSLC.credentialSubject.encodedList = 'INVALID-XYZ';
     invalidSLC.id = 'https://example.com/status/invalid-encoded-list';
@@ -833,7 +837,7 @@ describe('checkStatus', () => {
         statusListIndex: '50000',
         statusListCredential: invalidSLC.id
       },
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
     };
     const result = await checkStatus({
       credential, documentLoader, verifyStatusListCredential: false
@@ -876,7 +880,7 @@ describe('checkStatus', () => {
       credentialStatus: {
         id: 'https://example.com/status/1#67342',
         type: 'StatusList2021Entry',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       }
     };
     const documentLoader = 'https://example.com/status/1';
@@ -916,7 +920,7 @@ describe('checkStatus', () => {
         id: 'https://example.com/status/1#50000',
         type: 'StatusList2021Entry',
         statusListIndex: '50000',
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       }
     };
     const documentLoader = extendContextLoader(async url => {
@@ -960,7 +964,7 @@ describe('checkStatus', () => {
         VC_SL_CONTEXT_URL
       ],
       id: 'urn:uuid:e74fb1d6-7926-11ea-8e11-10bf48838a41',
-      issuer: SLC.issuer,
+      issuer: SLCRevocation.issuer,
       issuanceDate: '2021-03-10T04:24:12.164Z',
       type: ['VerifiableCredential', 'example:TestCredential'],
       credentialSubject: {
@@ -972,7 +976,7 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
         statusListIndex: 50000,
-        statusListCredential: SLC.id
+        statusListCredential: SLCRevocation.id
       }
     };
     let err;
@@ -1016,7 +1020,7 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLC.id,
+        statusListCredential: SLCRevocation.id,
       },
       // this issuer does not match the issuer for the mock SLC specified
       // by `SLC.id` above
@@ -1054,7 +1058,7 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'revocation',
         statusListIndex: '67342',
-        statusListCredential: SLC.id,
+        statusListCredential: SLCRevocation.id,
       },
       // this issuer does not match the issuer for the mock SLC specified
       // by `SLC.id` above
@@ -1195,7 +1199,7 @@ describe('getCredentialStatus', () => {
       type: 'InvalidType',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLC.id
+      statusListCredential: SLCRevocation.id
     };
     let err;
     let result;
@@ -1222,14 +1226,14 @@ describe('getCredentialStatus', () => {
       type: 'ex:NonmatchingStatusType',
       statusPurpose: 'suspension',
       statusListIndex: '67342',
-      statusListCredential: SLC.id
+      statusListCredential: SLCRevocation.id
     },
     {
       id: 'https://example.com/status/1#67342',
       type: 'StatusList2021Entry',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLC.id
+      statusListCredential: SLCRevocation.id
     }];
     let err;
     let result;
@@ -1274,14 +1278,14 @@ describe('getCredentialStatus', () => {
       type: 'ex:NonmatchingStatusType',
       statusPurpose: 'revocation',
       statusListIndex: '12345',
-      statusListCredential: SLC.id
+      statusListCredential: SLCRevocation.id
     },
     {
       id: 'https://example.com/status/1#67342',
       type: 'ex:NonmatchingStatusType',
       statusPurpose: 'suspension',
       statusListIndex: '67342',
-      statusListCredential: SLC.id
+      statusListCredential: SLCRevocation.id
     }];
     let err;
     let result;
@@ -1307,7 +1311,7 @@ describe('getCredentialStatus', () => {
       type: 'StatusList2021Entry',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLC.id
+      statusListCredential: SLCRevocation.id
     };
     let err;
     let result;
@@ -1331,7 +1335,7 @@ describe('getCredentialStatus', () => {
       type: 'StatusList2021Entry',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLC.id
+      statusListCredential: SLCRevocation.id
     };
     let err;
     let result;
@@ -1357,7 +1361,7 @@ describe('getCredentialStatus', () => {
       type: 'StatusList2021Entry',
       statusPurpose: 'revocation',
       statusListIndex: '67342',
-      statusListCredential: SLC.id
+      statusListCredential: SLCRevocation.id
     };
     let err;
     let result;
