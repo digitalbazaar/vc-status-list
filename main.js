@@ -19,7 +19,26 @@ export async function decodeList({encodedList}) {
   return StatusList.decode({encodedList});
 }
 
-export async function createCredential({id, list}) {
+/**
+ * Creates a StatusList Credential.
+ *
+ * @param {object} options - Options to use.
+ * @param {string} options.id - The id for StatusList Credential.
+ * @param {StatusList} options.list - An instance of StatusList.
+ * @param {string} options.statusPurpose - The purpose of the status entry.
+ *
+ * @returns {object} The resulting `StatusList Credential`.
+ */
+export async function createCredential({id, list, statusPurpose}) {
+  if(!(id && typeof id === 'string')) {
+    throw new TypeError('"id" is required.');
+  }
+  if(!(list && list instanceof StatusList)) {
+    throw new TypeError('"list" is required.');
+  }
+  if(!(statusPurpose && typeof statusPurpose === 'string')) {
+    throw new TypeError('"statusPurpose" is required.');
+  }
   const encodedList = await list.encode();
   return {
     '@context': [VC_V1_CONTEXT_URL, SL_V1_CONTEXT_URL],
@@ -28,7 +47,8 @@ export async function createCredential({id, list}) {
     credentialSubject: {
       id: `${id}#list`,
       type: 'StatusList2021',
-      encodedList
+      encodedList,
+      statusPurpose
     }
   };
 }

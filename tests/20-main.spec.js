@@ -89,7 +89,8 @@ describe('createCredential', () => {
   it('should create a StatusList2021Credential credential', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     credential.should.be.an('object');
     credential.should.deep.equal({
       '@context': [
@@ -101,7 +102,8 @@ describe('createCredential', () => {
       credentialSubject: {
         id: `${id}#list`,
         type: 'StatusList2021',
-        encodedList: encodedList100k
+        encodedList: encodedList100k,
+        statusPurpose: 'revocation'
       }
     });
   });
@@ -173,7 +175,8 @@ describe('statusTypeMatches', () => {
   it('should fail when "@context" is not an array', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -192,7 +195,8 @@ describe('statusTypeMatches', () => {
   it('should fail when first "@context" value is unexpected', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -211,7 +215,8 @@ describe('statusTypeMatches', () => {
   it('should fail when "credentialStatus" does not exist', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -229,7 +234,8 @@ describe('statusTypeMatches', () => {
     '"statusTypeMatches"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -249,7 +255,8 @@ describe('statusTypeMatches', () => {
     '"@context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -1086,7 +1093,8 @@ describe('assertStatusList2021Context', () => {
   it('should fail when "@context" is not an array', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -1105,7 +1113,8 @@ describe('assertStatusList2021Context', () => {
   it('should fail when first "@context" value is unexpected', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -1124,7 +1133,8 @@ describe('assertStatusList2021Context', () => {
   it('should fail when "CONTEXTS.RL_V1" is not in "@context"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -1158,7 +1168,8 @@ describe('getCredentialStatus', () => {
   it('should fail when "credentialStatus" is not an object', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     let err;
     let result;
     try {
@@ -1177,7 +1188,8 @@ describe('getCredentialStatus', () => {
     '"StatusList2021Entry"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     credential.credentialStatus = {
       id: 'https://example.com/status/1#67342',
       type: 'InvalidType',
@@ -1203,7 +1215,8 @@ describe('getCredentialStatus', () => {
     'with correct type', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     credential.credentialStatus = [{
       id: 'https://example.com/status/1#67342',
       type: 'ex:NonmatchingStatusType',
@@ -1234,7 +1247,8 @@ describe('getCredentialStatus', () => {
     'array', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     credential.credentialStatus = [ ];
     let err;
     let result;
@@ -1253,7 +1267,8 @@ describe('getCredentialStatus', () => {
     'matching "StatusList2021Entry"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     credential.credentialStatus = [{
       id: 'https://example.com/status/1#12345',
       type: 'ex:NonmatchingStatusType',
@@ -1285,7 +1300,8 @@ describe('getCredentialStatus', () => {
     '"StatusList2021Entry" and "statusPurpose" matches', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     credential.credentialStatus = {
       id: 'https://example.com/status/1#67342',
       type: 'StatusList2021Entry',
@@ -1308,7 +1324,8 @@ describe('getCredentialStatus', () => {
   it('should fail when "statusPurpose" is not specified', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     credential.credentialStatus = {
       id: 'https://example.com/status/1#67342',
       type: 'StatusList2021Entry',
@@ -1333,7 +1350,8 @@ describe('getCredentialStatus', () => {
     '"credentialStatus.statusPurpose"', async () => {
     const id = 'https://example.com/status/1';
     const list = await createList({length: 100000});
-    const credential = await createCredential({id, list});
+    const credential = await createCredential(
+      {id, list, statusPurpose: 'revocation'});
     credential.credentialStatus = {
       id: 'https://example.com/status/1#67342',
       type: 'StatusList2021Entry',
