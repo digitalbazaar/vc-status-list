@@ -507,7 +507,7 @@ describe('checkStatus', () => {
         type: 'StatusList2021Entry',
         statusPurpose: 'suspension',
         statusListIndex: '67342',
-        // intentionally point the statusListCredential the
+        // intentionally point the statusListCredential to the
         // status list credential with status purpose "revocation".
         statusListCredential: SLCRevocation.id
       },
