@@ -8,8 +8,8 @@ import {
 import * as didKey from '@digitalbazaar/did-method-key';
 import {extendContextLoader} from 'jsonld-signatures';
 import {
-  slCredentialRevocation as SLCRevocation
-  // slCredentialSuspension as SLCSuspension
+  slCredentialRevocation as SLCRevocation,
+  slCredentialSuspension as SLCSuspension
 } from './mock-sl-credentials.js';
 import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import vc from '@digitalbazaar/vc';
@@ -30,7 +30,7 @@ const documents = new Map();
 documents.set(VC_SL_CONTEXT_URL, VC_SL_CONTEXT);
 documents.set(SUITE_CONTEXT_URL, SUITE_CONTEXT);
 documents.set(SLCRevocation.id, SLCRevocation);
-// documents.set(SLCSuspension.id, SLCSuspension);
+documents.set(SLCSuspension.id, SLCSuspension);
 
 const didKeyDriver = didKey.driver();
 
@@ -508,11 +508,11 @@ describe('checkStatus', () => {
         statusListIndex: '67342',
         statusListCredential: SLCRevocation.id
       }, {
-        id: 'https://example.com/status/1#67343',
+        id: 'https://example.com/status/2#67343',
         type: 'StatusList2021Entry',
         statusPurpose: 'suspension',
         statusListIndex: '67343',
-        statusListCredential: SLCRevocation.id
+        statusListCredential: SLCSuspension.id
       }],
       issuer: SLCRevocation.issuer,
     };
@@ -648,7 +648,7 @@ describe('checkStatus', () => {
         statusPurpose: 'suspension',
         statusListIndex: '67342'
       },
-      issuer: SLCRevocation.issuer,
+      issuer: SLCSuspension.issuer,
     };
     const suite = new Ed25519Signature2020();
     const result = await checkStatus({
@@ -716,7 +716,7 @@ describe('checkStatus', () => {
         statusListIndex: '50000',
         // intentionally set statusListCredential to an id that is not set
         // in documents
-        statusListCredential: 'https://example.com/status/2'
+        statusListCredential: 'https://example.com/status/3'
       },
       issuer: SLCRevocation.issuer,
     };
@@ -731,7 +731,7 @@ describe('checkStatus', () => {
     should.exist(result.error);
     result.error.message.should.equal('Could not load ' +
       '"StatusList2021Credential"; reason: Document loader unable to load ' +
-      'URL "https://example.com/status/2".');
+      'URL "https://example.com/status/3".');
   });
 
   it('should fail when "statusListCredential" type does not ' +
@@ -1222,11 +1222,11 @@ describe('getCredentialStatus', () => {
     const credential = await createCredential(
       {id, list, statusPurpose: 'revocation'});
     credential.credentialStatus = [{
-      id: 'https://example.com/status/1#67342',
+      id: 'https://example.com/status/2#67342',
       type: 'ex:NonmatchingStatusType',
       statusPurpose: 'suspension',
       statusListIndex: '67342',
-      statusListCredential: SLCRevocation.id
+      statusListCredential: SLCSuspension.id
     },
     {
       id: 'https://example.com/status/1#67342',
@@ -1285,7 +1285,7 @@ describe('getCredentialStatus', () => {
       type: 'ex:NonmatchingStatusType',
       statusPurpose: 'suspension',
       statusListIndex: '67342',
-      statusListCredential: SLCRevocation.id
+      statusListCredential: SLCSuspension.id
     }];
     let err;
     let result;
