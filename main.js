@@ -185,7 +185,14 @@ async function _checkStatus({
     err.cause = e;
     throw err;
   }
-
+  const {statusPurpose: credentialStatusPurpose} = credentialStatus;
+  const {statusPurpose: slCredentialStatusPurpose} =
+    slCredential.credentialSubject;
+  if(slCredentialStatusPurpose !== credentialStatusPurpose) {
+    throw new Error(
+      'The status purpose of status list credential does not match the ' +
+      'status purpose of credential.');
+  }
   // verify SL VC
   if(verifyStatusListCredential) {
     const verifyResult = await vc.verifyCredential({
