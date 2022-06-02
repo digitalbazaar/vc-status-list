@@ -190,8 +190,9 @@ async function _checkStatus({
     slCredential.credentialSubject;
   if(slCredentialStatusPurpose !== credentialStatusPurpose) {
     throw new Error(
-      'The status purpose of status list credential does not match the ' +
-      'status purpose of credential.');
+      `The status purpose "${slCredentialStatusPurpose}" of status list ` +
+      `credential does not match the status purpose ` +
+      `"${credentialStatusPurpose}" of the credential.`);
   }
   // verify SL VC
   if(verifyStatusListCredential) {
