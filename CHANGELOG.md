@@ -4,6 +4,8 @@
 
 ### Added
 - **BREAKING**: Add required param `statusPurpose` to `createCredential()`.
+- Check if `statusPurpose` in credential matches the `statusPurpose` of
+  status list credential. If they don't match, an error will be thrown.
 
 ## 3.1.0 - 2022-05-30
 
