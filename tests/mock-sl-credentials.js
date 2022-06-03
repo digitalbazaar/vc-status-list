@@ -33,7 +33,7 @@ export const slCredentialRevocation = {
       'zGX1#z6MkesAkkxuETfHCMdv3gRTKr6iFiQZMjGT5pM8745oSzGX1',
     proofPurpose: 'assertionMethod',
     proofValue: 'z23V1M4NHs6MZP2T2ANyFHbvyxg9VaEgK58CXqXBnugPUR1sXc7rxuw6h4bK' +
-    'cjDD24WRa7PSiAidtFWDa7UskBQxS'
+      'cjDD24WRa7PSiAidtFWDa7UskBQxS'
   }
 };
 

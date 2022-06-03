@@ -489,7 +489,7 @@ describe('checkStatus', () => {
     result.verified.should.equal(true);
   });
 
-  it('should fail to verify if status purpose of credential does not match ' +
+  it('should fail to verify if status purpose in credential does not match ' +
     'the status purpose of status list credential', async () => {
     const credential = {
       '@context': [
@@ -522,8 +522,8 @@ describe('checkStatus', () => {
     });
     should.exist(result.error);
     result.error.message.should.equal(
-      'The status purpose "revocation" of status list credential does not ' +
-      'match the status purpose "suspension" of the credential.');
+      'The status purpose "revocation" of the status list credential does ' +
+      'not match the status purpose "suspension" in the credential.');
     result.verified.should.equal(false);
   });
 
