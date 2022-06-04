@@ -1,6 +1,6 @@
 # vc-status-list ChangeLog
 
-## 4.0.0 - 2022-TBD
+## 4.0.0 - 2022-06-04
 
 ### Added
 - **BREAKING**: Add required param `statusPurpose` to `createCredential()`.
