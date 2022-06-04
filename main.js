@@ -33,7 +33,7 @@ export async function createCredential({id, list, statusPurpose}) {
   if(!(id && typeof id === 'string')) {
     throw new TypeError('"id" is required.');
   }
-  if(!(list && list instanceof StatusList)) {
+  if(!(list && typeof list.encode === 'function')) {
     throw new TypeError('"list" is required.');
   }
   if(!(statusPurpose && typeof statusPurpose === 'string')) {
