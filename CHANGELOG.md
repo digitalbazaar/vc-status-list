@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-status-list ChangeLog
 
-## 6.0.0 - 2022-10-xx
+## 6.0.0 - 2022-10-25
 
 ### Changed
 - **BREAKING**: Use `@digitalbazaar/vc@5` to get better safe mode
