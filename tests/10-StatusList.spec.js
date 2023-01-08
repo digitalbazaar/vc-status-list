@@ -6,8 +6,7 @@ import {StatusList} from '../lib/StatusList.js';
 const encodedList100k =
   'H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA';
 const encodedList100KWith50KthRevoked =
-  'H4sIAAAAAAAAA-3OMQ0AAAgDsOHfNB72EJJWQRMAAAAAAIDWXAcAAAAAAIDHFrc4zDz' +
-  'UMAAA';
+  'H4sIAAAAAAAAA-3OMQ0AAAgDsElHOh72EJJWQRMAAAAAAIDWXAcAAAAAAIDHFvRitn7UMAAA';
 
 describe('StatusList', () => {
   it('should create an instance', async () => {
