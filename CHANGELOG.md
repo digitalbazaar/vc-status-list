@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-status-list ChangeLog
 
-## 7.0.0 - 2023-01-dd
+## 7.0.0 - 2023-01-08
 
 ### Changed
 - **BREAKING**: Use little-endian bit order in bitstrings. Previous versions
