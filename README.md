@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-status-list
 
-[Verifiable Credential Status List 2021](https://github.com/w3c-ccg/vc-status-list-2021)
+[Verifiable Credential Status List 2021](https://github.com/w3c/vc-status-list-2021/)
 
 ### Creating a StatusList2021Credential
 
