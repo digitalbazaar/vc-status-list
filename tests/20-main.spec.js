@@ -311,6 +311,9 @@ describe('checkStatus', () => {
     });
     should.not.exist(result.error);
     result.verified.should.equal(true);
+    should.exist(result.revocation);
+    result.revocation.verified.should.equal(true);
+    should.not.exist(result.suspension);
   });
 
   it('should use default value when "verifyStatusListCredential" is not ' +
