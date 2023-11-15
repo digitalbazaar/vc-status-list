@@ -313,6 +313,7 @@ describe('checkStatus', () => {
     result.verified.should.equal(true);
     should.exist(result.revocation);
     result.revocation.verified.should.equal(true);
+    result.revocation.purpose.should.equal('revocation');
     should.not.exist(result.suspension);
   });
 
