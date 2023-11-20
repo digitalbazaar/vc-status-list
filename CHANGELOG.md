@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-status-list ChangeLog
 
-## 7.1.0 - 2023-11-dd
+## 7.1.0 - 2023-11-20
 
 ### Added
 - Include `results` in credential status check output.
