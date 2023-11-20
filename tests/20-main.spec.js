@@ -313,7 +313,8 @@ describe('checkStatus', () => {
     result.verified.should.equal(true);
     should.exist(result.results);
     result.results.should.be.lengthOf(1);
-    result.results.should.have.deep.members([{verified: true, credentialStatus: credential.credentialStatus}]);
+    result.results.should.have.deep.members(
+      [{verified: true, credentialStatus: credential.credentialStatus}]);
   });
 
   it('should use default value when "verifyStatusListCredential" is not ' +
