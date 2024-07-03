@@ -1,5 +1,14 @@
 # @digitalbazaar/vc-status-list
 
+---
+**NOTE:** Status List 2021 is being replaced by Bitstring Status List. Please see
+[@digitalbazaar/vc-bitstring-status-list](https://github.com/digitalbazaar/vc-bitstring-status-list)
+for our current implementation and
+[Bitstring Status List v1.0](https://github.com/w3c/vc-bitstring-status-list)
+for the latest specification.
+
+---
+
 [Verifiable Credential Status List 2021](https://github.com/w3c/vc-status-list-2021/)
 
 ### Creating a StatusList2021Credential
