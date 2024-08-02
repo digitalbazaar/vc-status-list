@@ -1,19 +1,19 @@
 /*!
  * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
  */
-import {
-  createList, decodeList, createCredential, checkStatus, statusTypeMatches,
-  assertStatusList2021Context, getCredentialStatus
-} from '../lib/index.js';
 import * as didKey from '@digitalbazaar/did-method-key';
-import jsigs from 'jsonld-signatures';
+import {
+  assertStatusList2021Context, checkStatus, createCredential, createList,
+  decodeList, getCredentialStatus, statusTypeMatches
+} from '../lib/index.js';
 import {
   slCredentialRevocation as SLCRevocation,
   slCredentialSuspension as SLCSuspension
 } from './mock-sl-credentials.js';
-import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import {defaultDocumentLoader} from '@digitalbazaar/vc';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
+import jsigs from 'jsonld-signatures';
+import statusListCtx from '@digitalbazaar/vc-status-list-context';
 import suiteCtx2020 from 'ed25519-signature-2020-context';
 
 const {extendContextLoader} = jsigs;
