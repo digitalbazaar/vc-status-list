@@ -4,6 +4,12 @@
 
 ### Changed
 - **BREAKING**: Require Node.js >=18.
+- Update dependencies.
+  - `@digitalbazaar/bitstring@3.1.0`
+  - `@digitalbazaar/credentials-context@3.1.0`
+  - `@digitalbazaar/vc@7.0.0`
+  - `@digitalbazaar/vc-status-list-context@3.1.1`
+- Update test and development dependencies.
 
 ## 7.1.0 - 2023-11-20
 
