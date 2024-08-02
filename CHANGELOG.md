@@ -1,5 +1,10 @@
 # @digitalbazaar/vc-status-list ChangeLog
 
+## 8.0.0 - 2024-08-xx
+
+### Changed
+- **BREAKING**: Require Node.js >=18.
+
 ## 7.1.0 - 2023-11-20
 
 ### Added
