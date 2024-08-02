@@ -2,6 +2,8 @@
  * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
  */
 import * as didKey from '@digitalbazaar/did-method-key';
+import * as statusListCtx from '@digitalbazaar/vc-status-list-context';
+import * as suiteCtx2020 from 'ed25519-signature-2020-context';
 import {
   assertStatusList2021Context, checkStatus, createCredential, createList,
   decodeList, getCredentialStatus, statusTypeMatches
@@ -13,8 +15,6 @@ import {
 import {defaultDocumentLoader} from '@digitalbazaar/vc';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import jsigs from 'jsonld-signatures';
-import statusListCtx from '@digitalbazaar/vc-status-list-context';
-import suiteCtx2020 from 'ed25519-signature-2020-context';
 
 const {extendContextLoader} = jsigs;
 
