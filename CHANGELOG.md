@@ -1,5 +1,12 @@
 # @digitalbazaar/vc-status-list ChangeLog
 
+## 8.0.1 - 2025-03-07
+
+### Changed
+- Update dependencies.
+  - `@digitalbazaar/credentials-context@3.2.0`.
+  - `@digitalbazaar/vc@7.1.1`.
+
 ## 8.0.0 - 2024-08-02
 
 ### Changed
