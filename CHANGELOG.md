@@ -1,6 +1,6 @@
 # @digitalbazaar/vc-status-list ChangeLog
 
-## 8.0.1 - 2025-03-07
+## 8.0.1 - 2025-03-xx
 
 ### Changed
 - Update dependencies.
